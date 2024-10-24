@@ -1,10 +1,35 @@
-from sqlalchemy import Column, Integer, String
-from .database import Base
+from sqlalchemy import Column, Integer, String, Date
+from database import Base
 
-class IDInformation(Base):
-    __tablename__ = 'id_information'
+class PhotoCard(Base):
+    __tablename__ = 'photo_card'
     id = Column(Integer, primary_key=True, index=True)
-    id_type = Column(String, index=True)
-    full_name = Column(String, index=True)
-    date_of_birth = Column(String)
+    first_name = Column(String, index=True)
+    last_name = Column(String, index=True)
+    address = Column(String)
+    photo_card_number = Column(String, unique=True)
+    date_of_birth = Column(Date)
+    card_number = Column(String)
+    gender = Column(String)
+    expiry_date = Column(Date)
+
+class Passport(Base):
+    __tablename__ = 'passport'
+    id = Column(Integer, primary_key=True, index=True)
+    given_name = Column(String, index=True)
+    last_name = Column(String, index=True)
+    date_of_birth = Column(Date)
     document_number = Column(String, unique=True)
+    expiry_date = Column(Date)
+    gender = Column(String)
+
+class DriverLicense(Base):
+    __tablename__ = 'driver_license'
+    id = Column(Integer, primary_key=True, index=True)
+    first_name = Column(String, index=True)
+    last_name = Column(String, index=True)
+    address = Column(String)
+    card_number = Column(String, unique=True)
+    license_number = Column(String, unique=True)
+    date_of_birth = Column(Date)
+    expiry_date = Column(Date)
