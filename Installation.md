@@ -69,3 +69,40 @@ pip install -r requirements.txt
 ```bash
 psql -U postgres
 ```
+
+2. Create the database:
+```bash
+CREATE DATABASE csit321;
+```
+
+3. Update the .env file with your database credentials:
+```bash
+SECRET_KEY=your_secret_key
+DEBUG=True
+DATABASE_NAME=csit321
+DATABASE_USER=postgres
+DATABASE_PASSWORD=your_password
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+```
+
+### **5. Configure Environment Variables**
+Ensure the .env file is in the root of the project (same directory as manage.py) and includes all necessary variables:
+
+SECRET_KEY (required)
+Database settings: DATABASE_NAME, DATABASE_USER, DATABASE_PASSWORD, DATABASE_HOST, DATABASE_PORT.
+
+### **6. Apply Migrations**
+Run the following commands to create and apply the database tables:
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+### **7. Run the Development Server**
+Start the server:
+```bash
+python manage.py runserver
+```
+
+
