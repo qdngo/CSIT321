@@ -1,37 +1,108 @@
-# CSIT321
-Capstone Project - Armadillo
-Armadillo: AI-Powered Patient Identity and Security Management System
+# **OCR Backend**
 
-Welcome to the Armadillo project! This repository contains the source code, documentation, and resources for a patient identity and security management system, developed as part of the University of Wollongong’s CSIT321 project in collaboration with Sample Assist Pty Ltd.
+This is a Django-based backend application for managing and handling `PhotoCard`, `Passport`, and `DriverLicense` data. It provides RESTful API endpoints for CRUD operations on these entities.
 
-Project Overview
+---
 
-The Armadillo project aims to solve two critical challenges in healthcare:
+## **Table of Contents**
 
-	1.	Patient Identity Verification: Utilizing Optical Character Recognition (OCR) to automate and improve patient identity verification.
-	2.	Data Security and Anomaly Detection: Enhancing data security using Machine Learning (ML) models to detect threats and anomalies in patient records.
+1. [Features](#features)
+2. [Technologies Used](#technologies-used)
+3. [Getting Started](#getting-started)
+4. [API Endpoints](#api-endpoints)
+5. [Notes](#notes)
 
-This project integrates advanced AI tools to automate administrative processes, reduce human error, improve data integrity, and enhance operational efficiency in healthcare environments.
+---
 
-Features
+## **Features**
 
-	•	OCR-Driven Identity Verification
-	•	Automatically scans and processes identity documents (e.g., passports, driving licenses).
-	•	Populates medical forms to streamline the patient onboarding process.
-	•	Reduces administrative load on healthcare staff and minimizes data errors.
-	•	Anomaly and Threat Detection
-	•	Implements user behavior analysis (UBA) and threat detection to safeguard patient data.
-	•	Provides real-time monitoring and alerting for unauthorized access or anomalies.
+- Create, read, update, and delete records for:
+  - `PhotoCard`
+  - `Passport`
+  - `DriverLicense`
+- REST API built using Django REST Framework.
 
-Project Benefits
+---
 
-	•	Saves time and reduces administrative costs.
-	•	Enhances data integrity and improves patient safety.
-	•	Provides a better patient experience by automating identity verification.
-	•	Mitigates security risks with real-time threat detection.
+## **Technologies Used**
 
-Stakeholders
+- **Python** (3.8+)
+- **Django** (5.x)
+- **Django REST Framework** (DRF)
+- **PostgreSQL** as the database
 
-	•	Primary Users: Doctors, nurses, hospitals, clinics, laboratories, and patients.
-	•	Client and Partner: Sample Assist Pty Ltd.
-	•	Development Team: University of Wollongong CSIT321 project students.
+---
+
+## **Getting Started**
+
+Follow these steps to get the project up and running.
+
+---
+
+### **1. Clone the Repository**
+
+Clone the repository from GitHub and navigate to the project directory:
+```bash
+git clone <repository-url>
+cd ocr_be
+```
+
+### **2. Set Up a Virtual Environment**
+Create and activate a Python virtual environment:
+```bash
+python -m venv env
+source env/bin/activate  # On Mac/Linux
+.\env\Scripts\activate   # On Windows
+```
+
+### **3. Install Dependencies**
+
+Install the required Python packages listed in the `requirements.txt` file:
+
+```bash
+pip install -r requirements.txt
+```
+
+### **4. Set Up the Database**
+
+1. Open your PostgreSQL terminal:
+```bash
+psql -U postgres
+```
+
+2. Create the database:
+```bash
+CREATE DATABASE csit321;
+```
+
+3. Update the .env file with your database credentials:
+```bash
+SECRET_KEY=your_secret_key
+DEBUG=True
+DATABASE_NAME=csit321
+DATABASE_USER=postgres
+DATABASE_PASSWORD=your_password
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+```
+
+### **5. Configure Environment Variables**
+Ensure the .env file is in the root of the project (same directory as manage.py) and includes all necessary variables:
+
+SECRET_KEY (required)
+Database settings: DATABASE_NAME, DATABASE_USER, DATABASE_PASSWORD, DATABASE_HOST, DATABASE_PORT.
+
+### **6. Apply Migrations**
+Run the following commands to create and apply the database tables:
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+### **7. Run the Development Server**
+Start the server:
+```bash
+python manage.py runserver
+```
+
+
