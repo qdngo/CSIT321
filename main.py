@@ -1,12 +1,12 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from database import SessionLocal
-from models import PhotoCard, Passport, DriverLicense
+from typing import List, Annotated
 
+from models import PhotoCard, Passport, DriverLicense
 
 app = FastAPI()
 
-# Dependency to get a database session
 def get_db():
     db = SessionLocal()
     try:
@@ -14,12 +14,14 @@ def get_db():
     finally:
         db.close()
 
+db_dependency = Annotated[Session, Depends(get_db)]
+
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the OCR Backend!"}
 
 @app.post("/store-photo-card")
-def store_photo_card(data: dict, db: Session = Depends(get_db)):
+def store_photo_card(data: dict, db: db_dependency):
     new_photo_card = PhotoCard(
         first_name=data['first_name'],
         last_name=data['last_name'],
