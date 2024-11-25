@@ -12,6 +12,7 @@ class PhotoCard(Base):
     card_number = Column(String)
     gender = Column(String)
     expiry_date = Column(Date)
+    image_url = Column(String, nullable=True)
 
 class Passport(Base):
     __tablename__ = 'passport'
@@ -22,6 +23,7 @@ class Passport(Base):
     document_number = Column(String, unique=True)
     expiry_date = Column(Date)
     gender = Column(String)
+    image_url = Column(String, nullable=True)
 
 class DriverLicense(Base):
     __tablename__ = 'driver_license'
@@ -33,3 +35,4 @@ class DriverLicense(Base):
     license_number = Column(String, unique=True)
     date_of_birth = Column(Date)
     expiry_date = Column(Date)
+    image_url = Column(String, nullable=True)

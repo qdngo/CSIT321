@@ -35,3 +35,13 @@ Stakeholders
 	•	Primary Users: Doctors, nurses, hospitals, clinics, laboratories, and patients.
 	•	Client and Partner: Sample Assist Pty Ltd.
 	•	Development Team: University of Wollongong CSIT321 project students.
+
+
+### Note for image storing:
+Install these libraries:
+pip install alembic
+pip install python-multipart
+
+For future schema updates:
+alembic revision --autogenerate -m "Describe the change here"
+alembic upgrade head
