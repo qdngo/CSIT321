@@ -1,11 +1,14 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
-from database import SessionLocal
+from database import SessionLocal, create_tables
 from typing import List, Annotated
-
 from models import PhotoCard, Passport, DriverLicense
 
+# Initialize the application
 app = FastAPI()
+
+# Create tables at startup
+create_tables()
 
 def get_db():
     db = SessionLocal()
