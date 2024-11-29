@@ -1,19 +1,34 @@
-from fastapi import FastAPI, Depends, UploadFile, File, Form, HTTPException
+from fastapi import FastAPI, Depends, UploadFile, File, Form, HTTPException, status
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
-from database import SessionLocal, create_tables
+from database import SessionLocal
 from typing import List, Annotated
-from models import PhotoCard, Passport, DriverLicense
+from models import PhotoCard, Passport, DriverLicense, User
 import os
 from uuid import uuid4
+from pydantic import BaseModel, EmailStr
+from jose import JWTError, jwt
+from datetime import datetime, timedelta
+import bcrypt
+
 
 # Initialize the application
 app = FastAPI()
+
+
+# Secret key and algorithm for JWT
+SECRET_KEY = "CSIT321"  # Replace with a strong secret key
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 # Create tables at startup
 # create_tables()
 
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# Serve the static files from the 'uploads' directory
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 def get_db():
     db = SessionLocal()
@@ -28,6 +43,7 @@ db_dependency = Annotated[Session, Depends(get_db)]
 def read_root():
     return {"message": "Welcome to the OCR Backend!"}
 
+# -------------- STORE FUNCTIONS --------------
 @app.post("/store-photo-card")
 def store_photo_card(data: dict, db: db_dependency):
     new_photo_card = PhotoCard(
@@ -75,7 +91,9 @@ def store_driver_license(data: dict, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_driver_license)
     return {"status": "Driver license information stored successfully", "id": new_driver_license.id}
+# ------------------------------------------
 
+# -------------- STORE ID CARDS FUNCTIONS --------------
 @app.get("/get-photo-card/{id}")
 def get_photo_card(id: int, db: Session = Depends(get_db)):
     photo_card = db.query(PhotoCard).filter(PhotoCard.id == id).first()
@@ -96,7 +114,10 @@ def get_driver_license(id: int, db: Session = Depends(get_db)):
     if driver_license is None:
         return {"status": "Driver license not found"}
     return driver_license
+# ------------------------------------------
 
+
+# -------------- IMAGE PROCESSING FUNCTIONS --------------
 def save_file(file: UploadFile):
     """Save uploaded file to the uploads directory."""
     file_extension = file.filename.split(".")[-1].lower()
@@ -218,3 +239,84 @@ async def process_driver_license(file: UploadFile = File(...), db: Session = Dep
         "ocr_data": ocr_data,
         "id": new_driver_license.id
     }
+    
+# ----------------------------------------------
+
+# -------------- PYDANTIC MODELS FOR REQUEST VALIDATION --------------
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+# -------------- UTILITY FUNCTIONS --------------
+def hash_password(password: str) -> str:
+    """Hash a password using bcrypt."""
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password.encode("utf-8"), salt).decode("utf-8")
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify a hashed password."""
+    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+
+
+def create_access_token(data: dict, expires_delta: timedelta = None):
+    """Create a JWT access token."""
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+# -------------- ENDPOINTS --------------
+@app.post("/signup", response_model=dict)
+def signup(user: UserCreate, db: Session = Depends(get_db)):
+    # Check if user already exists
+    existing_user = db.query(User).filter(User.email == user.email).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered",
+        )
+
+    # Hash the password and save user
+    hashed_password = hash_password(user.password)
+    new_user = User(email=user.email, password=hashed_password)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return {"message": "User created successfully"}
+
+
+@app.post("/login", response_model=Token)
+def login(user: UserLogin, db: Session = Depends(get_db)):
+    # Check if user exists
+    db_user = db.query(User).filter(User.email == user.email).first()
+    if not db_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials",
+        )
+
+    # Verify password
+    if not verify_password(user.password, db_user.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials",
+        )
+
+    # Create JWT token
+    access_token = create_access_token(data={"sub": db_user.email})
+    return {"access_token": access_token, "token_type": "bearer"}
