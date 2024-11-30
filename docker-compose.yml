@@ -1,11 +1,11 @@
-version: "3.9"
+version: "3.11"
 services:
   app:
     build: .
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql://postgres:27052004@db:5432/csit321
+      DATABASE_URL: postgresql://postgres:27052004@localhost:5432/csit321
     depends_on:
       - db
     volumes:
