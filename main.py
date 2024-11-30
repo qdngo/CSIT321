@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, UploadFile, File, Form, HTTPException, status
+from fastapi import FastAPI, Depends, UploadFile, File, Form, HTTPException, status, Query
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from database import SessionLocal
@@ -10,7 +10,8 @@ from pydantic import BaseModel, EmailStr
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 import bcrypt
-
+from ocr_utils import perform_ocr, map_ocr_to_fields, preprocess_image, define_regions, map_fields
+from field_mappings import PHOTO_CARD_FIELDS, PASSPORT_FIELDS, DRIVER_LICENSE_FIELDS
 
 # Initialize the application
 app = FastAPI()
@@ -320,3 +321,51 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     # Create JWT token
     access_token = create_access_token(data={"sub": db_user.email})
     return {"access_token": access_token, "token_type": "bearer"}
+
+# -------------- OCR FUNCTIONS --------------
+@app.post("/ocr/")
+async def ocr_endpoint(
+    file: UploadFile = File(...),
+    doc_type: str = Query(..., regex="^(photo_card|passport|driver_license)$")
+):
+    # Validate file type
+    if file.content_type not in ["image/jpeg", "image/png"]:
+        raise HTTPException(status_code=400, detail="Invalid file format. Please upload a JPEG or PNG file.")
+    
+    # Read file data
+    try:
+        image_data = await file.read()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Failed to read the uploaded file.")
+    
+    # Perform OCR
+    ocr_results = perform_ocr(image_data)
+
+    # Map fields based on document type
+    if doc_type == "photo_card":
+        extracted_data = map_ocr_to_fields(ocr_results, PHOTO_CARD_FIELDS)
+    elif doc_type == "passport":
+        extracted_data = map_ocr_to_fields(ocr_results, PASSPORT_FIELDS)
+    elif doc_type == "driver_license":
+        extracted_data = map_ocr_to_fields(ocr_results, DRIVER_LICENSE_FIELDS)
+    else:
+        raise HTTPException(status_code=400, detail="Unsupported document type.")
+
+    return {"doc_type": doc_type, "extracted_data": extracted_data}
+
+@app.post("/ocr/driver_license/")
+async def extract_driver_license_fields(file: UploadFile = File(...)):
+    # Ensure the file is uploaded correctly
+    if not file:
+        raise HTTPException(status_code=400, detail="File not uploaded.")
+    
+    # Read and preprocess the image
+    image_data = await file.read()
+    preprocessed_image = preprocess_image(image_data)
+    
+    # Perform OCR and map fields
+    ocr_results = perform_ocr(preprocessed_image)
+    regions = define_regions(preprocessed_image.size)
+    extracted_fields = map_fields(ocr_results, regions)
+
+    return {"extracted_fields": extracted_fields}
