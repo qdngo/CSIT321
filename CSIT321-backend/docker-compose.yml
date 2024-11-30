@@ -1,0 +1,26 @@
+version: "3.11"
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://postgres:27052004@localhost:5432/csit321
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+    command: sh -c "uvicorn main:app --reload --port=8000 --host=0.0.0.0"
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 27052004
+      POSTGRES_DB: csit321
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

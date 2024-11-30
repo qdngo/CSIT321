@@ -1,0 +1,172 @@
+\begin{thebibliography}{24}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\providecommand{\urlprefix}{URL }
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi:\discretionary{}{}{}#1}\else
+  \providecommand{\doi}{doi:\discretionary{}{}{}\begingroup
+  \urlstyle{rm}\Url}\fi
+
+\bibitem[{Cui et~al.(2021)Cui, Gao, Wei, Du, Guo, Dong, Lu, Zhou, Lv, Liu, Hu,
+  Yu, and Ma}]{cui2021pplcnet}
+Cui, C.; Gao, T.; Wei, S.; Du, Y.; Guo, R.; Dong, S.; Lu, B.; Zhou, Y.; Lv, X.;
+  Liu, Q.; Hu, X.; Yu, D.; and Ma, Y. 2021.
+\newblock PP-LCNet: A Lightweight CPU Convolutional Neural Network.
+
+\bibitem[{Du et~al.(2020)Du, Li, Guo, Yin, Liu, Zhou, Bai, Yu, Yang, Dang
+  et~al.}]{du2020pp}
+Du, Y.; Li, C.; Guo, R.; Yin, X.; Liu, W.; Zhou, J.; Bai, Y.; Yu, Z.; Yang, Y.;
+  Dang, Q.; et~al. 2020.
+\newblock PP-OCR: A practical ultra lightweight OCR system.
+\newblock \emph{arXiv preprint arXiv:2009.09941} .
+
+\bibitem[{Ghiasi et~al.(2021)Ghiasi, Cui, Srinivas, Qian, Lin, Cubuk, Le, and
+  Zoph}]{ghiasi2021simple}
+Ghiasi, G.; Cui, Y.; Srinivas, A.; Qian, R.; Lin, T.-Y.; Cubuk, E.~D.; Le,
+  Q.~V.; and Zoph, B. 2021.
+\newblock Simple copy-paste is a strong data augmentation method for instance
+  segmentation.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision
+  and Pattern Recognition}, 2918--2928.
+
+\bibitem[{Graves et~al.(2006)Graves, Fern{\'a}ndez, Gomez, and
+  Schmidhuber}]{graves2006connectionist}
+Graves, A.; Fern{\'a}ndez, S.; Gomez, F.; and Schmidhuber, J. 2006.
+\newblock Connectionist temporal classification: labelling unsegmented sequence
+  data with recurrent neural networks.
+\newblock In \emph{Proceedings of the 23rd international conference on Machine
+  learning}, 369--376.
+
+\bibitem[{He and Yang(2018)}]{mtwi}
+He, M.; and Yang, Z. 2018.
+\newblock ICPR 2018 contest on robust reading for multi-type web images (MTWI).
+\newblock
+  \url{https://tianchi.aliyun.com/competition/entrance/231651/information}.
+
+\bibitem[{He et~al.(2018)He, Zhang, Yin, and Liu}]{he2018multi}
+He, W.; Zhang, X.-Y.; Yin, F.; and Liu, C.-L. 2018.
+\newblock Multi-oriented and multi-lingual scene text detection with direct
+  regression.
+\newblock \emph{IEEE Transactions on Image Processing} 27(11): 5406--5419.
+
+\bibitem[{Heo et~al.(2019)Heo, Kim, Yun, Park, Kwak, and Choi}]{Overhaul}
+Heo, B.; Kim, J.; Yun, S.; Park, H.; Kwak, N.; and Choi, J.~Y. 2019.
+\newblock A Comprehensive Overhaul of Feature Distillation.
+\newblock \emph{CoRR} abs/1904.01866.
+\newblock \urlprefix\url{http://arxiv.org/abs/1904.01866}.
+
+\bibitem[{Howard et~al.(2019)Howard, Sandler, Chu, Chen, Chen, Tan, Wang, Zhu,
+  Pang, Vasudevan, Le, and Adam}]{Howard_2019_ICCV}
+Howard, A.; Sandler, M.; Chu, G.; Chen, L.-C.; Chen, B.; Tan, M.; Wang, W.;
+  Zhu, Y.; Pang, R.; Vasudevan, V.; Le, Q.~V.; and Adam, H. 2019.
+\newblock Searching for MobileNetV3.
+\newblock In \emph{Proceedings of the IEEE/CVF International Conference on
+  Computer Vision (ICCV)}.
+
+\bibitem[{Howard et~al.(2017)Howard, Zhu, Chen, Kalenichenko, Wang, Weyand,
+  Andreetto, and Adam}]{1704.04861}
+Howard, A.~G.; Zhu, M.; Chen, B.; Kalenichenko, D.; Wang, W.; Weyand, T.;
+  Andreetto, M.; and Adam, H. 2017.
+\newblock MobileNets: Efficient Convolutional Neural Networks for Mobile Vision
+  Applications.
+
+\bibitem[{Hu, Shen, and Sun(2018)}]{Hu_2018_CVPR}
+Hu, J.; Shen, L.; and Sun, G. 2018.
+\newblock Squeeze-and-Excitation Networks.
+\newblock In \emph{Proceedings of the IEEE Conference on Computer Vision and
+  Pattern Recognition (CVPR)}.
+
+\bibitem[{Huang et~al.(2019)Huang, Chen, He, Bai, Karatzas, Lu, and
+  Jawahar}]{huang2019icdar2019}
+Huang, Z.; Chen, K.; He, J.; Bai, X.; Karatzas, D.; Lu, S.; and Jawahar, C.
+  2019.
+\newblock Icdar2019 competition on scanned receipt ocr and information
+  extraction.
+\newblock In \emph{2019 International Conference on Document Analysis and
+  Recognition (ICDAR)}, 1516--1520. IEEE.
+
+\bibitem[{Karatzas et~al.(2011)Karatzas, Mestre, Mas, Nourbakhsh, and
+  Roy}]{karatzas2011icdar}
+Karatzas, D.; Mestre, S.~R.; Mas, J.; Nourbakhsh, F.; and Roy, P.~P. 2011.
+\newblock ICDAR 2011 robust reading competition-challenge 1: reading text in
+  born-digital images (web and email).
+\newblock In \emph{2011 International Conference on Document Analysis and
+  Recognition}, 1485--1490. IEEE.
+
+\bibitem[{Liao et~al.(2020{\natexlab{a}})Liao, Wan, Yao, Chen, and
+  Bai}]{liao2020real}
+Liao, M.; Wan, Z.; Yao, C.; Chen, K.; and Bai, X. 2020{\natexlab{a}}.
+\newblock Real-Time Scene Text Detection with Differentiable Binarization.
+\newblock In \emph{AAAI}, 11474--11481.
+
+\bibitem[{Liao et~al.(2020{\natexlab{b}})Liao, Wan, Yao, Chen, and Bai}]{DB}
+Liao, M.; Wan, Z.; Yao, C.; Chen, K.; and Bai, X. 2020{\natexlab{b}}.
+\newblock Real-time Scene Text Detection with Differentiable Binarization.
+\newblock In \emph{Proc. AAAI}.
+
+\bibitem[{Nayef et~al.(2019)Nayef, Patel, Busta, Chowdhury, Karatzas, Khlif,
+  Matas, Pal, Burie, Liu et~al.}]{nayef2019icdar2019}
+Nayef, N.; Patel, Y.; Busta, M.; Chowdhury, P.~N.; Karatzas, D.; Khlif, W.;
+  Matas, J.; Pal, U.; Burie, J.-C.; Liu, C.-l.; et~al. 2019.
+\newblock ICDAR2019 robust reading challenge on multi-lingual scene text
+  detection and recognition—RRC-MLT-2019.
+\newblock In \emph{2019 International Conference on Document Analysis and
+  Recognition (ICDAR)}, 1582--1587. IEEE.
+
+\bibitem[{Sanster(2018)}]{textrender}
+Sanster. 2018.
+\newblock Generate text images for training deep learning ocr model.
+\newblock \url{https://github.com/Sanster/text_renderer}.
+
+\bibitem[{Shi, Bai, and Yao(2016)}]{shi2016end}
+Shi, B.; Bai, X.; and Yao, C. 2016.
+\newblock An end-to-end trainable neural network for image-based sequence
+  recognition and its application to scene text recognition.
+\newblock \emph{IEEE transactions on pattern analysis and machine intelligence}
+  39(11): 2298--2304.
+
+\bibitem[{Shi et~al.(2017)Shi, Yao, Liao, Yang, Xu, Cui, Belongie, Lu, and
+  Bai}]{shi2017icdar2017}
+Shi, B.; Yao, C.; Liao, M.; Yang, M.; Xu, P.; Cui, L.; Belongie, S.; Lu, S.;
+  and Bai, X. 2017.
+\newblock ICDAR2017 competition on reading chinese text in the wild (RCTW-17).
+\newblock In \emph{2017 14th IAPR International Conference on Document Analysis
+  and Recognition (ICDAR)}, volume~1, 1429--1434. IEEE.
+
+\bibitem[{Sun et~al.(2019)Sun, Liu, Liu, Han, Ding, and Liu}]{sun2019chinese}
+Sun, Y.; Liu, J.; Liu, W.; Han, J.; Ding, E.; and Liu, J. 2019.
+\newblock Chinese street view text: Large-scale chinese text reading with
+  partially supervised learning.
+\newblock In \emph{Proceedings of the IEEE International Conference on Computer
+  Vision}, 9086--9095.
+
+\bibitem[{Tan and Le(2019)}]{1907.09595}
+Tan, M.; and Le, Q.~V. 2019.
+\newblock MixConv: Mixed Depthwise Convolutional Kernels .
+
+\bibitem[{Wen et~al.(2016)Wen, Zhang, Li, and Qiao}]{wen2016discriminative}
+Wen, Y.; Zhang, K.; Li, Z.; and Qiao, Y. 2016.
+\newblock A discriminative feature learning approach for deep face recognition.
+\newblock In \emph{European conference on computer vision}, 499--515. Springer.
+
+\bibitem[{Xu et~al.(2018)Xu, Yang, Meng, Lu, Huang, Ying, and
+  Huang}]{xu2018towards}
+Xu, Z.; Yang, W.; Meng, A.; Lu, N.; Huang, H.; Ying, C.; and Huang, L. 2018.
+\newblock Towards end-to-end license plate detection and recognition: A large
+  dataset and baseline.
+\newblock In \emph{Proceedings of the European conference on computer vision
+  (ECCV)}, 255--271.
+
+\bibitem[{Yao et~al.(2012)Yao, Bai, Liu, Ma, and Tu}]{yao2012detecting}
+Yao, C.; Bai, X.; Liu, W.; Ma, Y.; and Tu, Z. 2012.
+\newblock Detecting texts of arbitrary orientations in natural images.
+\newblock In \emph{2012 IEEE conference on computer vision and pattern
+  recognition}, 1083--1090. IEEE.
+
+\bibitem[{Zhang et~al.(2017)Zhang, Xiang, Hospedales, and Lu}]{dml2017}
+Zhang, Y.; Xiang, T.; Hospedales, T.~M.; and Lu, H. 2017.
+\newblock Deep Mutual Learning.
+\newblock \emph{CoRR} abs/1706.00384.
+\newblock \urlprefix\url{http://arxiv.org/abs/1706.00384}.
+
+\end{thebibliography}
