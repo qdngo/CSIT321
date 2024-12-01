@@ -2,11 +2,11 @@ from fastapi import FastAPI, Depends, UploadFile, File, Form, HTTPException, sta
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from database import SessionLocal
-from typing import List, Annotated
+from typing import List, Annotated, Optional
 from models import PhotoCard, Passport, DriverLicense, User
 import os
 from uuid import uuid4
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 import bcrypt
@@ -44,6 +44,7 @@ db_dependency = Annotated[Session, Depends(get_db)]
 def read_root():
     return {"message": "Welcome to the OCR Backend!"}
 
+'''
 # -------------- STORE FUNCTIONS --------------
 @app.post("/store-photo-card")
 def store_photo_card(data: dict, db: db_dependency):
@@ -114,134 +115,101 @@ def get_driver_license(id: int, db: Session = Depends(get_db)):
     driver_license = db.query(DriverLicense).filter(DriverLicense.id == id).first()
     if driver_license is None:
         return {"status": "Driver license not found"}
-    return driver_license
+    return driver_licensehm
 # ------------------------------------------
 
+'''
 
-# -------------- IMAGE PROCESSING FUNCTIONS --------------
-def save_file(file: UploadFile):
-    """Save uploaded file to the uploads directory."""
-    file_extension = file.filename.split(".")[-1].lower()
-    if file_extension not in ["jpg", "jpeg", "png"]:
-        raise HTTPException(status_code=400, detail="Unsupported file format")
 
-    unique_filename = f"{uuid4().hex}.{file_extension}"
-    file_path = os.path.join(UPLOAD_DIR, unique_filename)
+# ---------------------------- IMAGE PROCESSING FUNCTIONS ----------------------------
+# Save uploaded file to a specific folder
+def save_file(file: UploadFile, folder: str = "uploads") -> str:
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
+    file_extension = file.filename.split(".")[-1]
+    unique_filename = f"{uuid4()}.{file_extension}"
+    file_path = os.path.join(folder, unique_filename)
 
     with open(file_path, "wb") as f:
         f.write(file.file.read())
+
     return file_path
 
-@app.post("/process-photo-card")
-async def process_photo_card(file: UploadFile = File(...), db: Session = Depends(get_db)):
-    # Step 1: Save the image
-    file_path = save_file(file)
-
-    # Step 2: Save the image URL to the database
-    new_photo_card = PhotoCard(
-        first_name=None,
-        last_name=None,
-        address=None,
-        photo_card_number=None,
-        date_of_birth=None,
-        card_number=None,
-        gender=None,
-        expiry_date=None,
-        image_url=file_path
-    )
-    db.add(new_photo_card)
-    db.commit()
-    db.refresh(new_photo_card)
-
-    # Step 3: Mock OCR data
-    ocr_data = {
-        "first_name": "John",
-        "last_name": "Doe",
-        "address": "123 Elm Street",
-        "date_of_birth": "1990-01-01",
-        "gender": "M"
-    }
-
-    return {
-        "image_url": file_path,
-        "ocr_data": ocr_data,
-        "id": new_photo_card.id
-    }
-
-@app.post("/process-passport")
-async def process_passport(file: UploadFile = File(...), db: Session = Depends(get_db)):
-    # Step 1: Save the image
-    file_path = save_file(file)
-
-    # Step 2: Save the image URL to the database
-    new_passport = Passport(
-        given_name=None,
-        last_name=None,
-        date_of_birth=None,
-        document_number=None,
-        expiry_date=None,
-        gender=None,
-        image_url=file_path
-    )
-    db.add(new_passport)
-    db.commit()
-    db.refresh(new_passport)
-
-    # Step 3: Mock OCR data
-    ocr_data = {
-        "given_name": "Jane",
-        "last_name": "Smith",
-        "date_of_birth": "1988-05-20",
-        "document_number": "P12345678",
-        "expiry_date": "2030-05-20",
-        "gender": "F"
-    }
-
-    return {
-        "image_url": file_path,
-        "ocr_data": ocr_data,
-        "id": new_passport.id
-    }
-
-
-@app.post("/process-driver-license")
-async def process_driver_license(file: UploadFile = File(...), db: Session = Depends(get_db)):
-    # Step 1: Save the image
-    file_path = save_file(file)
-
-    # Step 2: Save the image URL to the database
-    new_driver_license = DriverLicense(
-        first_name=None,
-        last_name=None,
-        address=None,
-        card_number=None,
-        license_number=None,
-        date_of_birth=None,
-        expiry_date=None,
-        image_url=file_path
-    )
-    db.add(new_driver_license)
-    db.commit()
-    db.refresh(new_driver_license)
-
-    # Step 3: Mock OCR data
-    ocr_data = {
-        "first_name": "Alice",
-        "last_name": "Johnson",
-        "address": "456 Oak Street",
-        "card_number": "DLC987654",
-        "license_number": "LIC123456",
-        "date_of_birth": "1978-09-30",
-        "expiry_date": "2030-09-30"
-    }
-
-    return {
-        "image_url": file_path,
-        "ocr_data": ocr_data,
-        "id": new_driver_license.id
-    }
+@app.post("/process_driver_license/")
+async def process_driver_license(file: UploadFile = File(...)):
+    # Ensure the file is uploaded correctly
+    if not file:
+        raise HTTPException(status_code=400, detail="File not uploaded.")
     
-# ----------------------------------------------
+    # Read file data
+    try:
+        image_data = await file.read()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Failed to read the uploaded file.")
+    
+    # Preprocess the image
+    preprocessed_image = preprocess_image(image_data)
+    image_size = preprocessed_image.size  # Get the image size
+
+    # Perform OCR
+    ocr_results = perform_ocr(preprocessed_image)
+
+    # Define regions and map OCR results to fields
+    regions = define_regions(image_size)
+    extracted_data = map_ocr_to_fields(ocr_results, regions)
+
+    return {"doc_type": "driver_license", "extracted_data": extracted_data}
+
+
+@app.post("/process_passport/")
+async def process_passport(file: UploadFile = File(...)):
+    # Ensure the file is uploaded correctly
+    if not file:
+        raise HTTPException(status_code=400, detail="File not uploaded.")
+    
+    # Read file data
+    try:
+        image_data = await file.read()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Failed to read the uploaded file.")
+    
+    # Preprocess the image
+    preprocessed_image = preprocess_image(image_data)
+
+    # Perform OCR
+    ocr_results = perform_ocr(preprocessed_image)
+
+    # Map OCR results to passport fields
+    extracted_data = map_ocr_to_fields(ocr_results, PASSPORT_FIELDS)
+
+    return {"doc_type": "passport", "extracted_data": extracted_data}
+
+
+@app.post("/process_photo_card/")
+async def process_photo_card(file: UploadFile = File(...)):
+    # Ensure the file is uploaded correctly
+    if not file:
+        raise HTTPException(status_code=400, detail="File not uploaded.")
+    
+    # Read file data
+    try:
+        image_data = await file.read()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Failed to read the uploaded file.")
+    
+    # Preprocess the image
+    preprocessed_image = preprocess_image(image_data)
+
+    # Perform OCR
+    ocr_results = perform_ocr(preprocessed_image)
+
+    # Map OCR results to photo card fields
+    extracted_data = map_ocr_to_fields(ocr_results, PHOTO_CARD_FIELDS)
+
+    return {"doc_type": "photo_card", "extracted_data": extracted_data}
+    
+# --------------------------------------------------------------------------
 
 # -------------- PYDANTIC MODELS FOR REQUEST VALIDATION --------------
 class UserCreate(BaseModel):
@@ -283,7 +251,7 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
 # -------------- ENDPOINTS --------------
 @app.post("/signup", response_model=dict)
 def signup(user: UserCreate, db: Session = Depends(get_db)):
-    # Check if user already exists
+    # Check if user already exists using the email primary key
     existing_user = db.query(User).filter(User.email == user.email).first()
     if existing_user:
         raise HTTPException(
@@ -298,12 +266,12 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
 
-    return {"message": "User created successfully"}
+    return {"message": "User created successfully", "email": new_user.email}
 
 
 @app.post("/login", response_model=Token)
 def login(user: UserLogin, db: Session = Depends(get_db)):
-    # Check if user exists
+    # Fetch the user by email
     db_user = db.query(User).filter(User.email == user.email).first()
     if not db_user:
         raise HTTPException(
@@ -321,6 +289,7 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     # Create JWT token
     access_token = create_access_token(data={"sub": db_user.email})
     return {"access_token": access_token, "token_type": "bearer"}
+
 
 # -------------- OCR FUNCTIONS --------------
 @app.post("/ocr/")
@@ -369,3 +338,119 @@ async def extract_driver_license_fields(file: UploadFile = File(...)):
     extracted_fields = map_fields(ocr_results, regions)
 
     return {"extracted_fields": extracted_fields}
+
+# -------------- STORING FIELDS FROM FRONTEND FUNCTIONS --------------
+# Define the Pydantic models for incoming payloads
+class DriverLicensePayload(BaseModel):
+    first_name: str
+    last_name: str
+    address: str
+    license_number: str
+    card_number: str
+    date_of_birth: str  # String in "DD MMM YYYY" format
+    expiry_date: str    # String in "DD MMM YYYY" format
+
+class PassportPayload(BaseModel):
+    given_name: str
+    last_name: str
+    date_of_birth: str  # String in "DD MMM YYYY" format
+    document_number: str
+    expiry_date: str    # String in "DD MMM YYYY" format
+    gender: Optional[str]
+
+class PhotoCardPayload(BaseModel):
+    first_name: str
+    last_name: str
+    address: str
+    photo_card_number: str
+    date_of_birth: str  # String in "DD MMM YYYY" format
+    card_number: str
+    gender: Optional[str]
+    expiry_date: str    # String in "DD MMM YYYY" format
+    
+# Endpoint to store validated driver's license data
+@app.post("/store_driver_license/")
+async def store_driver_license(payload: DriverLicensePayload, db: Session = Depends(get_db)):
+    try:
+        date_of_birth = datetime.strptime(payload.date_of_birth, "%d %b %Y").date()
+        expiry_date = datetime.strptime(payload.expiry_date, "%d %b %Y").date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use 'DD MMM YYYY'.")
+
+    new_driver_license = DriverLicense(
+        first_name=payload.first_name,
+        last_name=payload.last_name,
+        address=payload.address,
+        license_number=payload.license_number,
+        card_number=payload.card_number,
+        date_of_birth=date_of_birth,
+        expiry_date=expiry_date,
+    )
+
+    try:
+        db.add(new_driver_license)
+        db.commit()
+        db.refresh(new_driver_license)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to store driver license data.")
+
+    return {"message": "Driver license data stored successfully.", "id": new_driver_license.id}
+
+# Endpoint to store validated passport data
+@app.post("/store_passport/")
+async def store_passport(payload: PassportPayload, db: Session = Depends(get_db)):
+    try:
+        date_of_birth = datetime.strptime(payload.date_of_birth, "%d %b %Y").date()
+        expiry_date = datetime.strptime(payload.expiry_date, "%d %b %Y").date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use 'DD MMM YYYY'.")
+
+    new_passport = Passport(
+        given_name=payload.given_name,
+        last_name=payload.last_name,
+        date_of_birth=date_of_birth,
+        document_number=payload.document_number,
+        expiry_date=expiry_date,
+        gender=payload.gender,
+    )
+
+    try:
+        db.add(new_passport)
+        db.commit()
+        db.refresh(new_passport)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to store passport data.")
+
+    return {"message": "Passport data stored successfully.", "id": new_passport.id}
+
+# Endpoint to store validated photo card data
+@app.post("/store_photo_card/")
+async def store_photo_card(payload: PhotoCardPayload, db: Session = Depends(get_db)):
+    try:
+        date_of_birth = datetime.strptime(payload.date_of_birth, "%d %b %Y").date()
+        expiry_date = datetime.strptime(payload.expiry_date, "%d %b %Y").date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use 'DD MMM YYYY'.")
+
+    new_photo_card = PhotoCard(
+        first_name=payload.first_name,
+        last_name=payload.last_name,
+        address=payload.address,
+        photo_card_number=payload.photo_card_number,
+        date_of_birth=date_of_birth,
+        card_number=payload.card_number,
+        gender=payload.gender,
+        expiry_date=expiry_date,
+    )
+
+    try:
+        db.add(new_photo_card)
+        db.commit()
+        db.refresh(new_photo_card)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to store photo card data.")
+
+    return {"message": "Photo card data stored successfully.", "id": new_photo_card.id}

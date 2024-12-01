@@ -22,8 +22,8 @@ DRIVER_LICENSE_FIELDS = {
     "first_name": "First Name",
     "last_name": "Last Name",
     "address": "Address",
-    "card_number": "Card Number",
     "license_number": "License Number",
+    "card_number": "Card Number",
     "date_of_birth": "Date of Birth",
     "expiry_date": "Expiry Date"
 }

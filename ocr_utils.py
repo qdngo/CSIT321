@@ -31,36 +31,51 @@ def perform_ocr(image: Image.Image) -> list:
 
 def define_regions(image_size: tuple) -> dict:
     """
-    Define positional regions for each field based on the license layout.
-    :param image_size: Tuple (width, height) of the license image.
-    :return: Dictionary with regions for each field.
+    Define approximate bounding box regions for each field based on the typical layout
+    of an Australian (NSW) driver license.
+    :param image_size: Tuple of (width, height) of the image.
+    :return: Dictionary of regions for each field.
     """
     width, height = image_size
-
     return {
-        "first_name_last_name": (0, 0, width * 0.5, height * 0.2),  # Top-left region
-        "address": (0, height * 0.2, width * 0.5, height * 0.4),    # Below name
-        "license_number": (0, height * 0.4, width * 0.5, height * 0.5),  # Mid-left
-        "card_number": (width * 0.5, 0, width, height * 0.2),       # Top-right
-        "date_of_birth": (0, height * 0.5, width * 0.5, height * 0.6),  # Bottom-left
-        "expiry_date": (width * 0.5, height * 0.5, width, height * 0.6)  # Bottom-right
+        "first_name": (0.05 * width, 0.12 * height, 0.4 * width, 0.2 * height),  # Example percentages
+        "last_name": (0.05 * width, 0.2 * height, 0.9 * width, 0.3 * height),
+        "address": (0.4 * width, 0.12 * height, 0.9 * width, 0.2 * height), 
+        "license_number": (0.05 * width, 0.3 * height, 0.5 * width, 0.4 * height),
+        "card_number": (0.7 * width, 0.12 * height, 0.95 * width, 0.2 * height),
+        "date_of_birth": (0.05 * width, 0.4 * height, 0.4 * width, 0.5 * height),
+        "expiry_date": (0.6 * width, 0.4 * height, 0.9 * width, 0.5 * height),
     }
 
-def map_ocr_to_fields(ocr_results: List[Dict], field_mapping: Dict[str, str]) -> Dict[str, Union[str, None]]:
+def map_ocr_to_fields(ocr_results: list, field_regions: dict) -> dict:
     """
-    Map OCR results to the required fields based on the field mapping.
-
-    :param ocr_results: List of OCR results containing text and bounding boxes.
-    :param field_mapping: Dictionary mapping model fields to expected labels in OCR output.
-    :return: Dictionary containing extracted field values.
+    Map OCR results to specific fields based on bounding box regions.
+    :param ocr_results: List of OCR results from PaddleOCR.
+    :param field_regions: Dictionary of regions for each field.
+    :return: Dictionary of extracted data mapped to the fields.
     """
-    extracted_data = {field: None for field in field_mapping.keys()}
+    extracted_data = {field: None for field in field_regions.keys()}
 
-    for result in ocr_results:
-        text = result.get("text", "").strip()
-        for field, expected_label in field_mapping.items():
-            if expected_label.lower() in text.lower():
-                extracted_data[field] = text.replace(expected_label, "").strip()
+    for field, region in field_regions.items():
+        x_min, y_min, x_max, y_max = region
+
+        for result in ocr_results:
+            bbox = result[0]  # Bounding box coordinates
+            text = result[1][0].strip()  # Detected text
+
+            # Check if the center of the bounding box lies within the region
+            bbox_center_x = (bbox[0][0] + bbox[2][0]) / 2
+            bbox_center_y = (bbox[0][1] + bbox[2][1]) / 2
+
+            if x_min <= bbox_center_x <= x_max and y_min <= bbox_center_y <= y_max:
+                # Additional logic for specific fields (e.g., first name and last name)
+                if field == "first_name" and text.islower():
+                    extracted_data[field] = text
+                elif field == "last_name" and text.isupper():
+                    extracted_data[field] = text
+                else:
+                    extracted_data[field] = text
+                break
 
     return extracted_data
 
