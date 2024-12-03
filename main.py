@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, UploadFile, File, Form, HTTPException, status, Query
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
-from database import SessionLocal
+from database import SessionLocal, create_tables
 from typing import List, Annotated, Optional
 from models import PhotoCard, Passport, DriverLicense, User
 import os
@@ -10,7 +10,7 @@ from pydantic import BaseModel, EmailStr, Field
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 import bcrypt
-from ocr_utils import perform_ocr, map_ocr_to_fields, preprocess_image, define_regions, map_fields
+from ocr_utils import preprocess_image, perform_ocr, define_regions, map_ocr_to_fields, map_fields, define_passport_regions, define_photo_card_regions
 from field_mappings import PHOTO_CARD_FIELDS, PASSPORT_FIELDS, DRIVER_LICENSE_FIELDS
 
 # Initialize the application
@@ -43,82 +43,6 @@ db_dependency = Annotated[Session, Depends(get_db)]
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the OCR Backend!"}
-
-'''
-# -------------- STORE FUNCTIONS --------------
-@app.post("/store-photo-card")
-def store_photo_card(data: dict, db: db_dependency):
-    new_photo_card = PhotoCard(
-        first_name=data['first_name'],
-        last_name=data['last_name'],
-        address=data['address'],
-        photo_card_number=data['photo_card_number'],
-        date_of_birth=data['date_of_birth'],
-        card_number=data['card_number'],
-        gender=data['gender'],
-        expiry_date=data['expiry_date']
-    )
-    db.add(new_photo_card)
-    db.commit()
-    db.refresh(new_photo_card)
-    return {"status": "Photo card information stored successfully", "id": new_photo_card.id}
-
-@app.post("/store-passport")
-def store_passport(data: dict, db: Session = Depends(get_db)):
-    new_passport = Passport(
-        given_name=data['given_name'],
-        last_name=data['last_name'],
-        date_of_birth=data['date_of_birth'],
-        document_number=data['document_number'],
-        expiry_date=data['expiry_date'],
-        gender=data['gender']
-    )
-    db.add(new_passport)
-    db.commit()
-    db.refresh(new_passport)
-    return {"status": "Passport information stored successfully", "id": new_passport.id}
-
-@app.post("/store-driver-license")
-def store_driver_license(data: dict, db: Session = Depends(get_db)):
-    new_driver_license = DriverLicense(
-        first_name=data['first_name'],
-        last_name=data['last_name'],
-        address=data['address'],
-        card_number=data['card_number'],
-        license_number=data['license_number'],
-        date_of_birth=data['date_of_birth'],
-        expiry_date=data['expiry_date']
-    )
-    db.add(new_driver_license)
-    db.commit()
-    db.refresh(new_driver_license)
-    return {"status": "Driver license information stored successfully", "id": new_driver_license.id}
-# ------------------------------------------
-
-# -------------- STORE ID CARDS FUNCTIONS --------------
-@app.get("/get-photo-card/{id}")
-def get_photo_card(id: int, db: Session = Depends(get_db)):
-    photo_card = db.query(PhotoCard).filter(PhotoCard.id == id).first()
-    if photo_card is None:
-        return {"status": "Photo card not found"}
-    return photo_card
-
-@app.get("/get-passport/{id}")
-def get_passport(id: int, db: Session = Depends(get_db)):
-    passport = db.query(Passport).filter(Passport.id == id).first()
-    if passport is None:
-        return {"status": "Passport not found"}
-    return passport
-
-@app.get("/get-driver-license/{id}")
-def get_driver_license(id: int, db: Session = Depends(get_db)):
-    driver_license = db.query(DriverLicense).filter(DriverLicense.id == id).first()
-    if driver_license is None:
-        return {"status": "Driver license not found"}
-    return driver_licensehm
-# ------------------------------------------
-
-'''
 
 
 # ---------------------------- IMAGE PROCESSING FUNCTIONS ----------------------------
@@ -180,8 +104,11 @@ async def process_passport(file: UploadFile = File(...)):
     # Perform OCR
     ocr_results = perform_ocr(preprocessed_image)
 
+    # Define bounding box regions for passport fields
+    passport_regions = define_passport_regions(preprocessed_image.size)
+
     # Map OCR results to passport fields
-    extracted_data = map_ocr_to_fields(ocr_results, PASSPORT_FIELDS)
+    extracted_data = map_fields(ocr_results, passport_regions)
 
     return {"doc_type": "passport", "extracted_data": extracted_data}
 
@@ -204,10 +131,14 @@ async def process_photo_card(file: UploadFile = File(...)):
     # Perform OCR
     ocr_results = perform_ocr(preprocessed_image)
 
+    # Define bounding box regions for photo card fields
+    photo_card_regions = define_photo_card_regions(preprocessed_image.size)
+
     # Map OCR results to photo card fields
-    extracted_data = map_ocr_to_fields(ocr_results, PHOTO_CARD_FIELDS)
+    extracted_data = map_fields(ocr_results, photo_card_regions)
 
     return {"doc_type": "photo_card", "extracted_data": extracted_data}
+
     
 # --------------------------------------------------------------------------
 
@@ -342,6 +273,7 @@ async def extract_driver_license_fields(file: UploadFile = File(...)):
 # -------------- STORING FIELDS FROM FRONTEND FUNCTIONS --------------
 # Define the Pydantic models for incoming payloads
 class DriverLicensePayload(BaseModel):
+    email: EmailStr
     first_name: str
     last_name: str
     address: str
@@ -351,6 +283,7 @@ class DriverLicensePayload(BaseModel):
     expiry_date: str    # String in "DD MMM YYYY" format
 
 class PassportPayload(BaseModel):
+    email: EmailStr
     given_name: str
     last_name: str
     date_of_birth: str  # String in "DD MMM YYYY" format
@@ -359,6 +292,7 @@ class PassportPayload(BaseModel):
     gender: Optional[str]
 
 class PhotoCardPayload(BaseModel):
+    email: EmailStr
     first_name: str
     last_name: str
     address: str
@@ -371,6 +305,11 @@ class PhotoCardPayload(BaseModel):
 # Endpoint to store validated driver's license data
 @app.post("/store_driver_license/")
 async def store_driver_license(payload: DriverLicensePayload, db: Session = Depends(get_db)):
+    # Ensure user exists
+    user = db.query(User).filter(User.email == payload.email).first()
+    if not user:
+        raise HTTPException(status_code=400, detail="User with the given email does not exist.")
+    
     try:
         date_of_birth = datetime.strptime(payload.date_of_birth, "%d %b %Y").date()
         expiry_date = datetime.strptime(payload.expiry_date, "%d %b %Y").date()
@@ -378,6 +317,7 @@ async def store_driver_license(payload: DriverLicensePayload, db: Session = Depe
         raise HTTPException(status_code=400, detail="Invalid date format. Use 'DD MMM YYYY'.")
 
     new_driver_license = DriverLicense(
+        email=payload.email,
         first_name=payload.first_name,
         last_name=payload.last_name,
         address=payload.address,
@@ -387,19 +327,19 @@ async def store_driver_license(payload: DriverLicensePayload, db: Session = Depe
         expiry_date=expiry_date,
     )
 
-    try:
-        db.add(new_driver_license)
-        db.commit()
-        db.refresh(new_driver_license)
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail="Failed to store driver license data.")
-
-    return {"message": "Driver license data stored successfully.", "id": new_driver_license.id}
+    db.add(new_driver_license)
+    db.commit()
+    db.refresh(new_driver_license)
+    return {"message": "Driver license data stored successfully."}
 
 # Endpoint to store validated passport data
 @app.post("/store_passport/")
 async def store_passport(payload: PassportPayload, db: Session = Depends(get_db)):
+    # Ensure user exists
+    user = db.query(User).filter(User.email == payload.email).first()
+    if not user:
+        raise HTTPException(status_code=400, detail="User with the given email does not exist.")
+
     try:
         date_of_birth = datetime.strptime(payload.date_of_birth, "%d %b %Y").date()
         expiry_date = datetime.strptime(payload.expiry_date, "%d %b %Y").date()
@@ -407,6 +347,7 @@ async def store_passport(payload: PassportPayload, db: Session = Depends(get_db)
         raise HTTPException(status_code=400, detail="Invalid date format. Use 'DD MMM YYYY'.")
 
     new_passport = Passport(
+        email=payload.email,
         given_name=payload.given_name,
         last_name=payload.last_name,
         date_of_birth=date_of_birth,
@@ -415,19 +356,19 @@ async def store_passport(payload: PassportPayload, db: Session = Depends(get_db)
         gender=payload.gender,
     )
 
-    try:
-        db.add(new_passport)
-        db.commit()
-        db.refresh(new_passport)
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail="Failed to store passport data.")
-
-    return {"message": "Passport data stored successfully.", "id": new_passport.id}
+    db.add(new_passport)
+    db.commit()
+    db.refresh(new_passport)
+    return {"message": "Passport data stored successfully."}
 
 # Endpoint to store validated photo card data
 @app.post("/store_photo_card/")
 async def store_photo_card(payload: PhotoCardPayload, db: Session = Depends(get_db)):
+    # Ensure user exists
+    user = db.query(User).filter(User.email == payload.email).first()
+    if not user:
+        raise HTTPException(status_code=400, detail="User with the given email does not exist.")
+
     try:
         date_of_birth = datetime.strptime(payload.date_of_birth, "%d %b %Y").date()
         expiry_date = datetime.strptime(payload.expiry_date, "%d %b %Y").date()
@@ -435,6 +376,7 @@ async def store_photo_card(payload: PhotoCardPayload, db: Session = Depends(get_
         raise HTTPException(status_code=400, detail="Invalid date format. Use 'DD MMM YYYY'.")
 
     new_photo_card = PhotoCard(
+        email=payload.email,
         first_name=payload.first_name,
         last_name=payload.last_name,
         address=payload.address,
@@ -445,12 +387,29 @@ async def store_photo_card(payload: PhotoCardPayload, db: Session = Depends(get_
         expiry_date=expiry_date,
     )
 
-    try:
-        db.add(new_photo_card)
-        db.commit()
-        db.refresh(new_photo_card)
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail="Failed to store photo card data.")
+    db.add(new_photo_card)
+    db.commit()
+    db.refresh(new_photo_card)
+    return {"message": "Photo card data stored successfully."}
 
-    return {"message": "Photo card data stored successfully.", "id": new_photo_card.id}
+# ---------------------------- RETRIEVAL ENDPOINTS ----------------------------
+@app.get("/get-photo-card/")
+def get_photo_card(email: str, db: Session = Depends(get_db)):
+    photo_cards = db.query(PhotoCard).filter(PhotoCard.email == email).all()
+    if not photo_cards:
+        return {"status": "No photo cards found for the given email."}
+    return photo_cards
+
+@app.get("/get-passport/")
+def get_passport(email: str, db: Session = Depends(get_db)):
+    passports = db.query(Passport).filter(Passport.email == email).all()
+    if not passports:
+        return {"status": "No passports found for the given email."}
+    return passports
+
+@app.get("/get-driver-license/")
+def get_driver_license(email: str, db: Session = Depends(get_db)):
+    driver_licenses = db.query(DriverLicense).filter(DriverLicense.email == email).all()
+    if not driver_licenses:
+        return {"status": "No driver licenses found for the given email."}
+    return driver_licenses

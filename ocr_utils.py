@@ -106,3 +106,32 @@ def map_fields(ocr_results: list, regions: dict) -> dict:
                 break  # Assign the text to the first matching region
 
     return extracted_data
+
+def define_passport_regions(image_size: tuple) -> dict:
+    """
+    Define approximate bounding box regions for Australian passports.
+    """
+    width, height = image_size
+    return {
+        "given_name": (0.2 * width, 0.4 * height, 0.5 * width, 0.5 * height),  # Adjust based on example
+        "last_name": (0.2 * width, 0.3 * height, 0.5 * width, 0.4 * height),
+        "date_of_birth": (0.6 * width, 0.5 * height, 0.8 * width, 0.6 * height),
+        "document_number": (0.6 * width, 0.2 * height, 0.8 * width, 0.3 * height),
+        "expiry_date": (0.6 * width, 0.6 * height, 0.8 * width, 0.7 * height),
+        "gender": (0.2 * width, 0.5 * height, 0.3 * width, 0.6 * height),
+    }
+
+def define_photo_card_regions(image_size: tuple) -> dict:
+    """
+    Define approximate bounding box regions for NSW photo cards.
+    """
+    width, height = image_size
+    return {
+        "first_name": (0.2 * width, 0.3 * height, 0.5 * width, 0.4 * height),  # Adjust based on example
+        "last_name": (0.2 * width, 0.2 * height, 0.5 * width, 0.3 * height),
+        "address": (0.2 * width, 0.4 * height, 0.8 * width, 0.5 * height),
+        "photo_card_number": (0.6 * width, 0.1 * height, 0.8 * width, 0.2 * height),
+        "card_number": (0.6 * width, 0.2 * height, 0.8 * width, 0.3 * height),
+        "date_of_birth": (0.2 * width, 0.6 * height, 0.5 * width, 0.7 * height),
+        "expiry_date": (0.6 * width, 0.6 * height, 0.8 * width, 0.7 * height),
+    }
