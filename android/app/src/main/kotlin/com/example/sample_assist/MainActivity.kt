@@ -28,23 +28,23 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "opencv")
-    .setMethodCallHandler { call, result ->
-        if (call.method == "processImage") {
-            val filePath = call.argument<String>("filePath")
-            if (filePath != null) {
-                try {
-                    val processedImagePath = processImageWithOpenCV(filePath)
-                    result.success(processedImagePath)
-                } catch (e: Exception) {
-                    result.error("PROCESSING_ERROR", "Failed to process image with OpenCV: ${e.message}", null)
+        .setMethodCallHandler { call, result ->
+            if (call.method == "processImage") {
+                val filePath = call.argument<String>("filePath")
+                if (filePath != null) {
+                    try {
+                        val processedImagePath = processImageWithOpenCV(filePath)
+                        result.success(processedImagePath)
+                    } catch (e: Exception) {
+                        result.error("PROCESSING_ERROR", "Failed to process image with OpenCV: ${e.message}", null)
+                    }
+                } else {
+                    result.error("INVALID_ARGUMENT", "File path is null or invalid", null)
                 }
             } else {
-                result.error("INVALID_ARGUMENT", "File path is null or invalid", null)
+                result.notImplemented()
             }
-        } else {
-            result.notImplemented()
         }
-    }
     }
 
     private fun processImageWithOpenCV(filePath: String): String {
