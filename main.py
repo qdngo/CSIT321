@@ -10,7 +10,7 @@ from pydantic import BaseModel, EmailStr, Field
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 import bcrypt
-from ocr_utils import preprocess_image, perform_ocr, define_regions, map_ocr_to_fields, map_fields, define_passport_regions, define_photo_card_regions
+from ocr_utils import preprocess_image, perform_ocr, define_license_regions, map_ocr_to_fields, define_passport_regions, define_photo_card_regions
 from field_mappings import PHOTO_CARD_FIELDS, PASSPORT_FIELDS, DRIVER_LICENSE_FIELDS
 
 # Initialize the application
@@ -72,18 +72,31 @@ async def process_driver_license(file: UploadFile = File(...)):
     except Exception:
         raise HTTPException(status_code=400, detail="Failed to read the uploaded file.")
     
+    ''''''
     # Preprocess the image
-    preprocessed_image = preprocess_image(image_data)
-    image_size = preprocessed_image.size  # Get the image size
+    try:
+        preprocessed_image = preprocess_image(image_data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error during preprocessing: {str(e)}")
+    
+    # image_size = preprocessed_image.shape[1], preprocessed_image.shape[0]  # (width, height)
+    # image_size = preprocessed_image.shape[:2]  # Get (height, width)
+    
+    # Determine image size
+    try:
+        # Extract dimensions as (width, height)
+        image_size = preprocessed_image.size  # Get the image size
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error determining image size: {str(e)}")
 
-    # Perform OCR
-    ocr_results = perform_ocr(preprocessed_image)
-
-    # Define regions and map OCR results to fields
-    regions = define_regions(image_size)
-    extracted_data = map_ocr_to_fields(ocr_results, regions)
-
-    return {"doc_type": "driver_license", "extracted_data": extracted_data}
+    # Define regions and map OCR results
+    try:
+        regions = define_license_regions(image_size)
+        ocr_results = perform_ocr(preprocessed_image)
+        extracted_data = map_ocr_to_fields(ocr_results, regions, doc_type="driver_license")
+        return {"doc_type": "driver_license", "extracted_data": extracted_data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error during OCR processing: {str(e)}")
 
 
 @app.post("/process_passport/")
@@ -99,7 +112,10 @@ async def process_passport(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Failed to read the uploaded file.")
     
     # Preprocess the image
-    preprocessed_image = preprocess_image(image_data)
+    try:
+        preprocessed_image = preprocess_image(image_data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error during preprocessing: {str(e)}")
 
     # Perform OCR
     ocr_results = perform_ocr(preprocessed_image)
@@ -108,7 +124,8 @@ async def process_passport(file: UploadFile = File(...)):
     passport_regions = define_passport_regions(preprocessed_image.size)
 
     # Map OCR results to passport fields
-    extracted_data = map_fields(ocr_results, passport_regions)
+    # extracted_data = map_fields(ocr_results, passport_regions)
+    extracted_data = map_ocr_to_fields(ocr_results, passport_regions, doc_type="passport")
 
     return {"doc_type": "passport", "extracted_data": extracted_data}
 
@@ -126,7 +143,10 @@ async def process_photo_card(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Failed to read the uploaded file.")
     
     # Preprocess the image
-    preprocessed_image = preprocess_image(image_data)
+    try:
+        preprocessed_image = preprocess_image(image_data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error during preprocessing: {str(e)}")
 
     # Perform OCR
     ocr_results = perform_ocr(preprocessed_image)
@@ -135,7 +155,8 @@ async def process_photo_card(file: UploadFile = File(...)):
     photo_card_regions = define_photo_card_regions(preprocessed_image.size)
 
     # Map OCR results to photo card fields
-    extracted_data = map_fields(ocr_results, photo_card_regions)
+    #extracted_data = map_fields(ocr_results, photo_card_regions)
+    extracted_data = map_ocr_to_fields(ocr_results, photo_card_regions, doc_type="photo_card")
 
     return {"doc_type": "photo_card", "extracted_data": extracted_data}
 
@@ -221,7 +242,7 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     access_token = create_access_token(data={"sub": db_user.email})
     return {"access_token": access_token, "token_type": "bearer"}
 
-
+'''
 # -------------- OCR FUNCTIONS --------------
 @app.post("/ocr/")
 async def ocr_endpoint(
@@ -269,6 +290,7 @@ async def extract_driver_license_fields(file: UploadFile = File(...)):
     extracted_fields = map_fields(ocr_results, regions)
 
     return {"extracted_fields": extracted_fields}
+'''
 
 # -------------- STORING FIELDS FROM FRONTEND FUNCTIONS --------------
 # Define the Pydantic models for incoming payloads
@@ -284,7 +306,7 @@ class DriverLicensePayload(BaseModel):
 
 class PassportPayload(BaseModel):
     email: EmailStr
-    given_name: str
+    first_name: str
     last_name: str
     date_of_birth: str  # String in "DD MMM YYYY" format
     document_number: str
@@ -348,7 +370,7 @@ async def store_passport(payload: PassportPayload, db: Session = Depends(get_db)
 
     new_passport = Passport(
         email=payload.email,
-        given_name=payload.given_name,
+        first_name=payload.first_name,
         last_name=payload.last_name,
         date_of_birth=date_of_birth,
         document_number=payload.document_number,

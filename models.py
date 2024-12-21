@@ -20,7 +20,7 @@ class PhotoCard(Base):
 class Passport(Base):
     __tablename__ = 'passport'
     id = Column(Integer, primary_key=True, index=True)
-    given_name = Column(String, index=True)
+    first_name = Column(String, index=True)
     last_name = Column(String, index=True)
     date_of_birth = Column(Date)
     document_number = Column(String, unique=True)

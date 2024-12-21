@@ -1,5 +1,5 @@
 PASSPORT_FIELDS = {
-    "given_name": "Given Name",
+    "first_name": "First Name",
     "last_name": "Last Name",
     "date_of_birth": "Date of Birth",
     "document_number": "Document Number",
