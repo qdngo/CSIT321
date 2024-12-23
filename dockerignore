@@ -1,6 +1,36 @@
-env/
+# Exclude Python cache files
+*.pyc
+*.pyo
 __pycache__/
+*.log
 
-*.env
-*.env.*
-env.*
+# Exclude virtual environments
+venv/
+env/
+.venv/
+
+# Exclude environment variable files (if they contain secrets)
+.env
+
+# Exclude Git files
+.git/
+.gitignore
+
+# Exclude IDE/editor configuration files
+*.vscode/
+.idea/
+
+# Exclude large datasets or unnecessary files
+data/
+datasets/
+tmp/
+tests/
+
+# Exclude documentation and markdown files
+*.md
+docs/
+
+# Exclude build artifacts
+build/
+dist/
+*.egg-info/
