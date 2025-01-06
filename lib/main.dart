@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sample_assist/collect_registration/collect_registration.dart';
 import 'package:sample_assist/login/login_page.dart';
 import 'package:sample_assist/register/register_page.dart';
+import 'package:sample_assist/id_card_scanner_page.dart'; // Import the new scanner page
 
 void main() {
   runApp(const MyApp());
@@ -10,17 +11,21 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Collect Assist Demo',
       theme: ThemeData(
-        // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const CollectRegistration(),
+      initialRoute: '/login', // Define the initial route
+      routes: {
+        '/login': (context) => const LoginPage(),
+        '/register': (context) => const RegisterPage(),
+        '/collect_registration': (context) => const CollectRegistration(),
+        '/id_card_scanner': (context) => const IDCardScannerPage(), // Add the scanner route
+      },
     );
   }
 }
