@@ -40,10 +40,18 @@ dependencies:
   email_validator: ^3.0.0
   image_picker: ^1.1.2
   retrofit: ^4.4.1
-  logger: ^2.4.0  # for logging purpose
+  logger: ^2.4.0  # For logging purposes
   json_annotation: ^4.9.0
   dio: ^5.7.0
   flutter_secure_storage: ^9.2.2
+
+  # The following libraries are added for camera-based ID card detection:
+  camera: ^0.11.0           # For accessing and controlling the camera
+  google_ml_kit: ^0.8.0     # For object detection and image recognition
+
+  # Added dependency for file path operations
+  path_provider: ^2.0.12    # For accessing file system paths
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
