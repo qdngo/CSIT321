@@ -11,17 +11,73 @@ ocr = PaddleOCR(use_angle_cls=True, lang='en')
 
 def preprocess_image(image_data: bytes) -> Image.Image:
     """
-    Preprocess the image by resizing, converting to grayscale, and centering.
+    Preprocess the image to detect the edges of the ID card, rotate if necessary, and crop it to include only the ID card.
+    It also handles poor lighting and resizes the output image to a standard size.
     """
-    image = Image.open(io.BytesIO(image_data))
-    
-    # Resize to a standard size (e.g., 1024x640) using LANCZOS for resampling
-    standardized_size = (1024, 640)
-    image = ImageOps.fit(image, standardized_size, Image.Resampling.LANCZOS)
-    
-    # Convert to grayscale
-    image = image.convert("L")
-    return image
+    try:
+        # Step 1: Load the image
+        image = cv2.imdecode(np.frombuffer(image_data, np.uint8), cv2.IMREAD_COLOR)
+
+        # Step 2: Convert to grayscale
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+        # Step 3: Improve contrast using CLAHE (adaptive histogram equalization)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        gray = clahe.apply(gray)
+
+        # Step 4: Reduce noise with GaussianBlur
+        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+
+        # Step 5: Edge detection using Canny
+        edges = cv2.Canny(blurred, threshold1=50, threshold2=150)
+
+        # Step 6: Find contours
+        contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours = sorted(contours, key=cv2.contourArea, reverse=True)
+
+        # Step 7: Find the largest quadrilateral contour
+        id_card_contour = None
+        for contour in contours:
+            perimeter = cv2.arcLength(contour, True)
+            approx = cv2.approxPolyDP(contour, 0.02 * perimeter, True)
+            if len(approx) == 4:
+                id_card_contour = approx
+                break
+
+        if id_card_contour is None:
+            raise ValueError("No ID card contour found in the image.")
+
+        # Step 8: Apply perspective transformation
+        # Order the points in a consistent order (top-left, top-right, bottom-right, bottom-left)
+        def order_points(pts):
+            rect = np.zeros((4, 2), dtype="float32")
+            s = pts.sum(axis=1)
+            rect[0] = pts[np.argmin(s)]  # Top-left
+            rect[2] = pts[np.argmax(s)]  # Bottom-right
+            diff = np.diff(pts, axis=1)
+            rect[1] = pts[np.argmin(diff)]  # Top-right
+            rect[3] = pts[np.argmax(diff)]  # Bottom-left
+            return rect
+
+        card_points = id_card_contour.reshape(4, 2)
+        ordered_points = order_points(card_points)
+
+        # Define the dimensions for the output (width and height of the ID card)
+        width = 1024
+        height = 640
+        dst = np.array([[0, 0], [width - 1, 0], [width - 1, height - 1], [0, height - 1]], dtype="float32")
+
+        # Perform perspective transformation
+        M = cv2.getPerspectiveTransform(ordered_points, dst)
+        warped = cv2.warpPerspective(image, M, (width, height))
+
+        # Step 9: Convert the image back to PIL format
+        result_image = Image.fromarray(cv2.cvtColor(warped, cv2.COLOR_BGR2RGB))
+
+        return result_image
+
+    except Exception as e:
+        raise ValueError(f"Error in preprocessing: {str(e)}")
 
 
 

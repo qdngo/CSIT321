@@ -76,11 +76,11 @@ async def process_driver_license(file: UploadFile = File(...)):
     # Preprocess the image
     try:
         preprocessed_image = preprocess_image(image_data)
+        if preprocessed_image is None:
+            raise HTTPException(status_code=500, detail="Preprocessed image is invalid.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error during preprocessing: {str(e)}")
     
-    # image_size = preprocessed_image.shape[1], preprocessed_image.shape[0]  # (width, height)
-    # image_size = preprocessed_image.shape[:2]  # Get (height, width)
     
     # Determine image size
     try:
@@ -93,6 +93,9 @@ async def process_driver_license(file: UploadFile = File(...)):
     try:
         regions = define_license_regions(image_size)
         ocr_results = perform_ocr(preprocessed_image)
+        if not ocr_results:
+            raise HTTPException(status_code=500, detail="OCR failed to detect any text.")
+        
         extracted_data = map_ocr_to_fields(ocr_results, regions, doc_type="driver_license")
         return {"doc_type": "driver_license", "extracted_data": extracted_data}
     except Exception as e:
