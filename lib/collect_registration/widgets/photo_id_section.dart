@@ -5,6 +5,7 @@ class PhotoIdSection extends StatelessWidget {
   final File? uploadedPhoto; // Photo file passed to this widget
   final VoidCallback getPhotoFromGallery; // Callback to get photo from gallery
   final VoidCallback takePhoto; // Callback to take photo
+  final VoidCallback scanPhoto; // Callback to take photo
   final VoidCallback watchPhoto;
   final VoidCallback deletePhoto; // Callback to view the full photo
   final bool isCheck;
@@ -14,6 +15,7 @@ class PhotoIdSection extends StatelessWidget {
     required this.getPhotoFromGallery,
     required this.takePhoto,
     required this.watchPhoto,
+    required this.scanPhoto,
     required this.deletePhoto,
     required this.isCheck,
     super.key,
@@ -119,7 +121,8 @@ class PhotoIdSection extends StatelessWidget {
               onTap: () {
                 Navigator.pop(context);
 
-                takePhoto(); // Take a new photo
+                // Tự động mở camera và chụp ảnh sau 4 giây
+                scanPhoto();
               },
             ),
             const Divider(height: 1),

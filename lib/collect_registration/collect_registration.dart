@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:sample_assist/collect_registration/camera_with_frame.dart';
+import 'package:sample_assist/collect_registration/camera_with_scan.dart';
 import 'package:sample_assist/collect_registration/processing_page.dart';
 import 'package:sample_assist/utils/consts.dart';
 import 'widgets/step_indicator.dart';
@@ -71,6 +72,37 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
         context,
         MaterialPageRoute(
           builder: (context) => CameraWithFrame(
+            controller: controller,
+            initializeControllerFuture: initializeControllerFuture,
+          ),
+        ),
+      );
+      if (pickedFile != null) {
+        _uploadedPhoto = File(pickedFile.path);
+
+        await uploadFileDriver(_uploadedPhoto!.path, getPathProcess());
+      }
+      setState(() {});
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error capturing photo: $e');
+      }
+    }
+  }
+
+  //Method to take a photo using the camera
+  Future<void> _scanImage() async {
+    final cameras = await availableCameras();
+    CameraController controller =
+    CameraController(cameras.first, ResolutionPreset.high);
+    Future<void> initializeControllerFuture = controller.initialize();
+
+    try {
+      final XFile? pickedFile = await Navigator.push(
+        // ignore: use_build_context_synchronously
+        context,
+        MaterialPageRoute(
+          builder: (context) => CameraWithScan(
             controller: controller,
             initializeControllerFuture: initializeControllerFuture,
           ),
@@ -301,6 +333,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
                       uploadedPhoto: _uploadedPhoto,
                       getPhotoFromGallery: _getPhotoFromGallery,
                       takePhoto: _takePhoto,
+                      scanPhoto: _scanImage,
                       watchPhoto: _showFullPhotoDialog,
                       deletePhoto:
                       _deletePhoto, // Provide the watch photo callback
@@ -318,10 +351,12 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
                       label: 'Expiry Date',
                       controller: expiryController,
                     ),
-                    CustomTextField(
-                      label: 'Card Number',
-                      controller: cardNumberController,
-                    ),
+                    if (selectedPhotoIDType == "Driver's License" ||
+                        selectedPhotoIDType == "National ID")
+                      CustomTextField(
+                        label: 'Card Number',
+                        controller: cardNumberController,
+                      ),
                     SizedBox(height: 16),
                     SectionHeader(title: 'PERSONAL DETAILS'),
                     CustomTextField(
@@ -332,10 +367,11 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
                       label: 'Last Name',
                       controller: lastNameController,
                     ),
-                    CustomTextField(
-                      label: 'Sex',
-                      controller: sexController,
-                    ),
+                    if (selectedPhotoIDType == "Passport")
+                      CustomTextField(
+                        label: 'Sex',
+                        controller: sexController,
+                      ),
                     CustomTextField(
                       label: 'Date of Birth',
                       controller: dobController,
@@ -351,11 +387,15 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
                       controller: phoneNumberController,
                     ),
                     const SizedBox(height: 16),
-                    SectionHeader(title: 'ADDRESS'),
-                    CustomTextField(
-                      label: 'Address',
-                      controller: addressController,
-                    ),
+                    if (selectedPhotoIDType == "Driver's License" ||
+                        selectedPhotoIDType == "National ID")
+                      SectionHeader(title: 'ADDRESS'),
+                    if (selectedPhotoIDType == "Driver's License" ||
+                        selectedPhotoIDType == "National ID")
+                      CustomTextField(
+                        label: 'Address',
+                        controller: addressController,
+                      ),
                     const SizedBox(height: 16),
                     ActionButtons(
                       formKey: _formKey,

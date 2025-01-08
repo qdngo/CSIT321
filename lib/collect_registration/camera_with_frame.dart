@@ -1,9 +1,6 @@
-import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:image/image.dart' as img;
-import 'package:path_provider/path_provider.dart';
 
 class CameraWithFrame extends StatefulWidget {
   const CameraWithFrame({
@@ -20,7 +17,7 @@ class CameraWithFrame extends StatefulWidget {
 }
 
 class _CameraWithFrameState extends State<CameraWithFrame> {
-  final int _captureButtonHeight = 80; // Chiều cao của nút chụp ảnh
+  // final int _captureButtonHeight = 80; // Chiều cao của nút chụp ảnh
 
   // // Hàm cắt ảnh tự động theo khuôn có tỷ lệ 0.63 và trả về XFile
   // Future<XFile> _cropImage(String filePath) async {
