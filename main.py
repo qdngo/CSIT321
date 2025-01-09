@@ -10,7 +10,7 @@ from pydantic import BaseModel, EmailStr, Field
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 import bcrypt
-from ocr_utils import preprocess_image, perform_ocr, define_license_regions, map_ocr_to_fields, define_passport_regions, define_photo_card_regions
+from ocr_utils import preprocess_image, perform_ocr, define_license_regions, map_ocr_to_fields, define_passport_regions, define_photo_card_regions, process_image_with_status
 from field_mappings import PHOTO_CARD_FIELDS, PASSPORT_FIELDS, DRIVER_LICENSE_FIELDS
 
 # Initialize the application
@@ -62,104 +62,67 @@ def save_file(file: UploadFile, folder: str = "uploads") -> str:
 
 @app.post("/process_driver_license/")
 async def process_driver_license(file: UploadFile = File(...)):
-    # Ensure the file is uploaded correctly
     if not file:
         raise HTTPException(status_code=400, detail="File not uploaded.")
     
-    # Read file data
     try:
         image_data = await file.read()
-    except Exception:
-        raise HTTPException(status_code=400, detail="Failed to read the uploaded file.")
-    
-    ''''''
-    # Preprocess the image
-    try:
-        preprocessed_image = preprocess_image(image_data)
+        preprocessed_image, is_cropped = preprocess_image(image_data)
+        
+        return process_image_with_status(
+            preprocessed_image=preprocessed_image,
+            is_cropped=is_cropped,
+            doc_type="driver_license"
+        )
+        
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error during preprocessing: {str(e)}")
-    
-    # image_size = preprocessed_image.shape[1], preprocessed_image.shape[0]  # (width, height)
-    # image_size = preprocessed_image.shape[:2]  # Get (height, width)
-    
-    # Determine image size
-    try:
-        # Extract dimensions as (width, height)
-        image_size = preprocessed_image.size  # Get the image size
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error determining image size: {str(e)}")
-
-    # Define regions and map OCR results
-    try:
-        regions = define_license_regions(image_size)
-        ocr_results = perform_ocr(preprocessed_image)
-        extracted_data = map_ocr_to_fields(ocr_results, regions, doc_type="driver_license")
-        return {"doc_type": "driver_license", "extracted_data": extracted_data}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error during OCR processing: {str(e)}")
-
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error processing image: {str(e)}"
+        )
 
 @app.post("/process_passport/")
 async def process_passport(file: UploadFile = File(...)):
-    # Ensure the file is uploaded correctly
     if not file:
         raise HTTPException(status_code=400, detail="File not uploaded.")
     
-    # Read file data
     try:
         image_data = await file.read()
-    except Exception:
-        raise HTTPException(status_code=400, detail="Failed to read the uploaded file.")
-    
-    # Preprocess the image
-    try:
-        preprocessed_image = preprocess_image(image_data)
+        preprocessed_image, is_cropped = preprocess_image(image_data)
+        
+        return process_image_with_status(
+            preprocessed_image=preprocessed_image,
+            is_cropped=is_cropped,
+            doc_type="passport"
+        )
+        
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error during preprocessing: {str(e)}")
-
-    # Perform OCR
-    ocr_results = perform_ocr(preprocessed_image)
-
-    # Define bounding box regions for passport fields
-    passport_regions = define_passport_regions(preprocessed_image.size)
-
-    # Map OCR results to passport fields
-    # extracted_data = map_fields(ocr_results, passport_regions)
-    extracted_data = map_ocr_to_fields(ocr_results, passport_regions, doc_type="passport")
-
-    return {"doc_type": "passport", "extracted_data": extracted_data}
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error processing image: {str(e)}"
+        )
 
 
 @app.post("/process_photo_card/")
 async def process_photo_card(file: UploadFile = File(...)):
-    # Ensure the file is uploaded correctly
     if not file:
         raise HTTPException(status_code=400, detail="File not uploaded.")
     
-    # Read file data
     try:
         image_data = await file.read()
-    except Exception:
-        raise HTTPException(status_code=400, detail="Failed to read the uploaded file.")
-    
-    # Preprocess the image
-    try:
-        preprocessed_image = preprocess_image(image_data)
+        preprocessed_image, is_cropped = preprocess_image(image_data)
+        
+        return process_image_with_status(
+            preprocessed_image=preprocessed_image,
+            is_cropped=is_cropped,
+            doc_type="photo_card"
+        )
+        
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error during preprocessing: {str(e)}")
-
-    # Perform OCR
-    ocr_results = perform_ocr(preprocessed_image)
-
-    # Define bounding box regions for photo card fields
-    photo_card_regions = define_photo_card_regions(preprocessed_image.size)
-
-    # Map OCR results to photo card fields
-    #extracted_data = map_fields(ocr_results, photo_card_regions)
-    extracted_data = map_ocr_to_fields(ocr_results, photo_card_regions, doc_type="photo_card")
-
-    return {"doc_type": "photo_card", "extracted_data": extracted_data}
-
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error processing image: {str(e)}"
+        )
     
 # --------------------------------------------------------------------------
 
