@@ -253,7 +253,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
         dobController.text = data['date_of_birth'] ?? '';
         expiryController.text = data['expiry_date'] ?? '';
         sexController.text = data['gender'] ?? '';
-        idController.text = data['photo_card_number'] ?? data['license_number'];
+        idController.text = data['photo_card_number'] ?? data['license_number'] ?? '';
 
         setState(() {});
       } else {

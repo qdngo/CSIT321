@@ -269,8 +269,8 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController _email = TextEditingController(text: 'my@gmail.com');
-  final TextEditingController _password = TextEditingController(text: '12345678');
+  final TextEditingController _email = TextEditingController();
+  final TextEditingController _password = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   final FlutterSecureStorage _storage =
