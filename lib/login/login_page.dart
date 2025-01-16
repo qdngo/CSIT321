@@ -257,6 +257,7 @@ import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:sample_assist/collect_registration/collect_registration.dart';
+import 'package:sample_assist/utils/consts.dart';
 import '../gen/assets.gen.dart';
 import '../register/register_page.dart';
 
@@ -272,7 +273,8 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _password = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  final FlutterSecureStorage _storage = const FlutterSecureStorage(); // Secure storage instance
+  final FlutterSecureStorage _storage =
+  const FlutterSecureStorage(); // Secure storage instance
 
   bool _isPasswordVisible = false;
 
@@ -281,11 +283,9 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    const String apiUrl = "http://34.55.218.37:9090/login";
-
     try {
       final response = await http.post(
-        Uri.parse(apiUrl),
+        Uri.parse(loginUri),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "email": _email.text,
@@ -315,8 +315,8 @@ class _LoginPageState extends State<LoginPage> {
           Future.delayed(const Duration(seconds: 2), () {
             if (!mounted) return;
             Navigator.of(context).pop(); // Dismiss the dialog
-            Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) => const CollectRegistration(),
+            Navigator.of(context).pushReplacement(MaterialPageRoute(
+              builder: (context) =>  CollectRegistration(email: _email.text,),
             ));
           });
         } else {
@@ -325,7 +325,8 @@ class _LoginPageState extends State<LoginPage> {
       } else if (response.statusCode == 401) {
         _showErrorDialog("Invalid email or password.");
       } else {
-        _showErrorDialog("Unexpected error occurred. Status: ${response.statusCode}");
+        _showErrorDialog(
+            "Unexpected error occurred. Status: ${response.statusCode}");
       }
     } catch (error) {
       _showErrorDialog("An error occurred: $error");
@@ -355,14 +356,8 @@ class _LoginPageState extends State<LoginPage> {
         child: Form(
           key: _formKey,
           child: Container(
-            width: MediaQuery
-                .of(context)
-                .size
-                .width,
-            height: MediaQuery
-                .of(context)
-                .size
-                .height,
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height,
             padding: const EdgeInsets.all(35),
             decoration: BoxDecoration(
               image: DecorationImage(
@@ -390,7 +385,7 @@ class _LoginPageState extends State<LoginPage> {
                             style: GoogleFonts.lobster(
                               textStyle: const TextStyle(
                                 color: Color(0xFF1A1448),
-                                fontSize: 65,
+                                fontSize: 50,
                                 fontWeight: FontWeight.w400,
                               ),
                             ),
@@ -408,8 +403,8 @@ class _LoginPageState extends State<LoginPage> {
                               fontSize: 16,
                             ),
                             decoration: const InputDecoration(
-                              prefixIcon: Icon(
-                                  Icons.email, color: Color(0xFF1A1448)),
+                              prefixIcon:
+                              Icon(Icons.email, color: Color(0xFF1A1448)),
                               labelText: 'Email',
                               labelStyle: TextStyle(
                                 color: Color(0xFF1A1448),
@@ -447,8 +442,8 @@ class _LoginPageState extends State<LoginPage> {
                               fontSize: 16,
                             ),
                             decoration: InputDecoration(
-                              prefixIcon: const Icon(
-                                  Icons.lock, color: Color(0xFF1A1448)),
+                              prefixIcon: const Icon(Icons.lock,
+                                  color: Color(0xFF1A1448)),
                               suffixIcon: IconButton(
                                 icon: Icon(
                                   _isPasswordVisible
@@ -481,7 +476,8 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                             validator: (text) {
-                              if (text?.isNotEmpty == true && text!.length > 6) {
+                              if (text?.isNotEmpty == true &&
+                                  text!.length > 6) {
                                 return null;
                               } else {
                                 return 'Invalid Password!';
@@ -509,9 +505,8 @@ class _LoginPageState extends State<LoginPage> {
                                   padding: EdgeInsets.zero,
                                   minimumSize: const Size(0, 0),
                                 ),
-                                icon: const Icon(
-                                    Icons.lock_outline, color: Color(0xFF1A1448),
-                                    size: 18),
+                                icon: const Icon(Icons.lock_outline,
+                                    color: Color(0xFF1A1448), size: 18),
                               ),
                             ],
                           ),
@@ -540,25 +535,26 @@ class _LoginPageState extends State<LoginPage> {
                                 "Don't have an account? ",
                                 style: TextStyle(
                                   color: Color(0xFF1A1448),
-                                  fontSize: 16,
+                                  fontSize: 14,
                                 ),
                               ),
                               TextButton(
                                 onPressed: () {
                                   Navigator.of(context).push(MaterialPageRoute(
-                                      builder: (
-                                          context) => const RegisterPage()));
+                                      builder: (context) =>
+                                      const RegisterPage()));
                                 },
                                 style: TextButton.styleFrom(
                                   padding: EdgeInsets.zero,
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  tapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
                                 ),
                                 child: const Text(
                                   "Register",
                                   style: TextStyle(
                                     color: Color(0xFF01B4D2),
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 18,
+                                    fontSize: 14,
                                   ),
                                 ),
                               ),

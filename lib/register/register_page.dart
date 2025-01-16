@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:http/http.dart' as http;
+import 'package:sample_assist/utils/consts.dart';
 
 import '../gen/assets.gen.dart';
 
@@ -45,7 +46,7 @@ class _RegisterPageState extends State<RegisterPage> {
     try {
       // API call using http
       final http.Response response = await http.post(
-        Uri.parse('http://34.55.218.37:9090/signup'),
+        Uri.parse(registerUri),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
       );

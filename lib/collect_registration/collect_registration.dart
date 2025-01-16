@@ -5,7 +5,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:sample_assist/collect_registration/camera_with_frame.dart';
-import 'package:sample_assist/collect_registration/services/opencv_service.dart';
+import 'package:sample_assist/collect_registration/camera_with_scan.dart';
+import 'package:sample_assist/collect_registration/processing_page.dart';
+import 'package:sample_assist/utils/consts.dart';
 import 'widgets/step_indicator.dart';
 import 'widgets/section_title.dart';
 import 'widgets/photo_id_section.dart';
@@ -14,8 +16,10 @@ import 'widgets/custom_text_field.dart';
 import 'widgets/action_buttons.dart';
 import 'widgets/section_header.dart';
 import 'package:http/http.dart' as http;
+
 class CollectRegistration extends StatefulWidget {
-  const CollectRegistration({super.key});
+  const CollectRegistration({super.key, required this.email});
+  final String email;
 
   @override
   State<CollectRegistration> createState() => _CollectRegistrationScreenState();
@@ -27,19 +31,29 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
   final ImagePicker _imagePicker = ImagePicker();
   File? _uploadedPhoto;
   bool isLoading = false;
+
+  final idController = TextEditingController();
+  final nationalController = TextEditingController();
+  final expiryController = TextEditingController();
+  final cardNumberController = TextEditingController();
+  final firstNameController = TextEditingController();
+  final lastNameController = TextEditingController();
+  final addressController = TextEditingController();
+  final sexController = TextEditingController();
+  final dobController = TextEditingController();
+  final mobileNumberController = TextEditingController();
+  final phoneNumberController = TextEditingController();
   // Method to get a photo from the gallery
   Future<void> _getPhotoFromGallery() async {
     try {
       final XFile? pickedFile =
       await _imagePicker.pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
-        setState(() {
-          _uploadedPhoto = File(pickedFile.path);
-        });
+        _uploadedPhoto = File(pickedFile.path);
+
+        setState(() {});
       }
-      if (selectedPhotoIDType == "Driver's License") {
-        await _sendPhotoToApi(_uploadedPhoto!);
-      }
+      await uploadFileDriver(_uploadedPhoto!.path, getPathProcess());
     } catch (e) {
       print('Error selecting photo: $e');
     }
@@ -64,18 +78,107 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
         ),
       );
       if (pickedFile != null) {
-        setState(() {
-          _uploadedPhoto = File(pickedFile.path);
-        });
-        if (selectedPhotoIDType == "Driver's License") {
-          await _sendPhotoToApi(_uploadedPhoto!);
-        }
+        _uploadedPhoto = File(pickedFile.path);
+
+        await uploadFileDriver(_uploadedPhoto!.path, getPathProcess());
       }
+      setState(() {});
     } catch (e) {
       if (kDebugMode) {
         print('Error capturing photo: $e');
       }
     }
+  }
+
+  //Method to take a photo using the camera
+  Future<void> _scanImage() async {
+    final cameras = await availableCameras();
+    CameraController controller =
+    CameraController(cameras.first, ResolutionPreset.high);
+    Future<void> initializeControllerFuture = controller.initialize();
+
+    try {
+      final XFile? pickedFile = await Navigator.push(
+        // ignore: use_build_context_synchronously
+        context,
+        MaterialPageRoute(
+          builder: (context) => CameraWithScan(
+            controller: controller,
+            initializeControllerFuture: initializeControllerFuture,
+          ),
+        ),
+      );
+      if (pickedFile != null) {
+        _uploadedPhoto = File(pickedFile.path);
+
+        await uploadFileDriver(_uploadedPhoto!.path, getPathProcess());
+      }
+      setState(() {});
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error capturing photo: $e');
+      }
+    }
+  }
+
+  String getPathProcess() {
+    if (selectedPhotoIDType == "Driver's License") {
+      return pathProcessDriverLicense;
+    } else if (selectedPhotoIDType == "Passport") {
+      return pathProcessPassport;
+    } else if (selectedPhotoIDType == "National ID") {
+      return pathProcessPhotoCard;
+    }
+    return '';
+  }
+
+  String getPathStorege() {
+    if (selectedPhotoIDType == "Driver's License") {
+      return pathStoreDriverLicense;
+    } else if (selectedPhotoIDType == "Passport") {
+      return pathStorePassport;
+    } else if (selectedPhotoIDType == "National ID") {
+      return pathStorePhotoCard;
+    }
+    return '';
+  }
+
+  Map<String, dynamic> getBody() {
+    if (selectedPhotoIDType == "Driver's License") {
+      return {
+        "email": widget.email,
+        "first_name": firstNameController.text,
+        "last_name": lastNameController.text,
+        "address": addressController.text,
+        "license_number": idController.text,
+        "card_number": cardNumberController.text,
+        "date_of_birth": dobController.text,
+        "expiry_date": expiryController.text,
+      };
+    } else if (selectedPhotoIDType == "Passport") {
+      return {
+        "email": widget.email,
+        "first_name": firstNameController.text,
+        "last_name": lastNameController.text,
+        "date_of_birth": dobController.text,
+        "document_number": idController.text,
+        "expiry_date": expiryController.text,
+        "gender": sexController.text,
+      };
+    } else if (selectedPhotoIDType == "National ID") {
+      return {
+        "email": widget.email,
+        "first_name": firstNameController.text,
+        "last_name": lastNameController.text,
+        "address": addressController.text,
+        "photo_card_number": idController.text,
+        "date_of_birth": dobController.text,
+        "card_number": cardNumberController.text,
+        "gender": sexController.text,
+        "expiry_date": expiryController.text,
+      };
+    }
+    return <String, dynamic>{};
   }
 
   // Method to show the full photo in a dialog
@@ -106,37 +209,61 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
       },
     );
   }
-  Future<void> _sendPhotoToApi(File photo) async {
-    setState(() {
-      isLoading = true;
-    });
+
+  Future<void> uploadFileDriver(String filePath, String urlApi) async {
+    final url = Uri.parse('$baseUri$urlApi');
 
     try {
-      // Process the image locally with OpenCV
-      final processedPhotoPath = await OpenCVService.processImage(photo.path);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const ProcessingPage(),
+        ),
+      );
 
-      // Send the processed photo to the API
-      const String apiUrl = "http://34.55.218.37:9090/process_driver_license/";
-      final request = http.MultipartRequest('POST', Uri.parse(apiUrl));
-      request.files.add(await http.MultipartFile.fromPath('file', processedPhotoPath));
+      await Future.delayed(const Duration(seconds: 2));
+      // Tạo file từ đường dẫn
+      var file = File(filePath);
 
-      final response = await request.send();
-      final responseBody = await response.stream.bytesToString();
+      // Kiểm tra file có tồn tại không
+      if (!await file.exists()) {
+        print('File không tồn tại.');
+        return;
+      }
 
+      // Tạo yêu cầu multipart
+      var request = http.MultipartRequest('POST', url)
+        ..headers['Accept'] = 'application/json'
+        ..files.add(await http.MultipartFile.fromPath('file', file.path));
+
+      // Gửi yêu cầu
+      var response = await request.send();
+
+      // Đọc phần hồi
+      Navigator.pop(context);
+
+      // Kiểm tra phản hồi
       if (response.statusCode == 200) {
-        final data = jsonDecode(responseBody);
-        // _populateFormFields(data['extracted_data']);
+        var responseBody = await response.stream.bytesToString();
+        final data = jsonDecode(responseBody)['extracted_data'] ?? '';
+        firstNameController.text = data['first_name'] ?? '';
+        lastNameController.text = data['last_name'] ?? '';
+        addressController.text = data['address'] ?? '';
+        cardNumberController.text = data['card_number'] ?? '';
+        dobController.text = data['date_of_birth'] ?? '';
+        expiryController.text = data['expiry_date'] ?? '';
+        sexController.text = data['gender'] ?? '';
+        idController.text = data['photo_card_number'] ?? data['license_number'] ?? '';
+
+        setState(() {});
       } else {
-        _showErrorDialog("Failed to process image. Status: ${response.statusCode}");
+        print('Lỗi khi tải lên: ${response.statusCode}');
       }
     } catch (e) {
-      _showErrorDialog("An error occurred: $e");
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
+      print('Đã xảy ra lỗi: $e');
     }
   }
+
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
@@ -152,7 +279,6 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
       ),
     );
   }
-
 
   void _deletePhoto() {
     // Delete the photo and update the state
@@ -207,36 +333,74 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
                       uploadedPhoto: _uploadedPhoto,
                       getPhotoFromGallery: _getPhotoFromGallery,
                       takePhoto: _takePhoto,
+                      scanPhoto: _scanImage,
                       watchPhoto: _showFullPhotoDialog,
                       deletePhoto:
                       _deletePhoto, // Provide the watch photo callback
+                      isCheck: selectedPhotoIDType != null,
                     ),
-                    const CustomTextField(label: 'Photo ID Document Number'),
-                    const CustomTextField(label: 'Nationality'),
-                    const CustomTextField(label: 'Expiry Date'),
-                    const CustomTextField(label: 'Card Number'),
+                    CustomTextField(
+                      label: 'Photo ID Document Number',
+                      controller: idController,
+                    ),
+                    CustomTextField(
+                      label: 'Nationality',
+                      controller: nationalController,
+                    ),
+                    CustomTextField(
+                      label: 'Expiry Date',
+                      controller: expiryController,
+                    ),
+                    if (selectedPhotoIDType == "Driver's License" ||
+                        selectedPhotoIDType == "National ID")
+                      CustomTextField(
+                        label: 'Card Number',
+                        controller: cardNumberController,
+                      ),
+                    SizedBox(height: 16),
+                    SectionHeader(title: 'PERSONAL DETAILS'),
+                    CustomTextField(
+                      label: 'First Name',
+                      controller: firstNameController,
+                    ),
+                    CustomTextField(
+                      label: 'Last Name',
+                      controller: lastNameController,
+                    ),
+                    if (selectedPhotoIDType == "Passport")
+                      CustomTextField(
+                        label: 'Sex',
+                        controller: sexController,
+                      ),
+                    CustomTextField(
+                      label: 'Date of Birth',
+                      controller: dobController,
+                    ),
                     const SizedBox(height: 16),
-                    const SectionHeader(title: 'PERSONAL DETAILS'),
-                    const CustomTextField(label: 'First Name'),
-                    const CustomTextField(label: 'Last Name'),
-                    const CustomTextField(label: 'Sex'),
-                    const CustomTextField(label: 'Date of Birth'),
+                    SectionHeader(title: 'CONTACT INFORMATION'),
+                    CustomTextField(
+                      label: 'Mobile Number',
+                      controller: mobileNumberController,
+                    ),
+                    CustomTextField(
+                      label: 'Phone Number (Optional)',
+                      controller: phoneNumberController,
+                    ),
                     const SizedBox(height: 16),
-                    const SectionHeader(title: 'CONTACT INFORMATION'),
-                    const CustomTextField(label: 'Mobile Number'),
-                    const CustomTextField(label: 'Phone Number (Optional)'),
-                    const SizedBox(height: 16),
-                    const SectionHeader(title: 'ADDRESS'),
-                    const CustomTextField(label: 'Address'),
+                    if (selectedPhotoIDType == "Driver's License" ||
+                        selectedPhotoIDType == "National ID")
+                      SectionHeader(title: 'ADDRESS'),
+                    if (selectedPhotoIDType == "Driver's License" ||
+                        selectedPhotoIDType == "National ID")
+                      CustomTextField(
+                        label: 'Address',
+                        controller: addressController,
+                      ),
                     const SizedBox(height: 16),
                     ActionButtons(
                       formKey: _formKey,
-                      onConfirm: () {
-                        if (_formKey.currentState!.validate()) {
-                          // Perform confirm action
-                          print("Form submitted successfully");
-                        }
-                      },
+                      path: getPathStorege(),
+                      body: getBody(),
                     ),
                   ],
                 ),
