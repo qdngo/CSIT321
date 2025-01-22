@@ -1,25 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:sample_assist/collect_registration/collect_registration.dart';
-import 'package:sample_assist/login/login_page.dart';
+import 'package:camera/camera.dart';
+import 'collect_registration/collect_registration.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final cameras = await availableCameras();
+  final firstCamera = cameras.first;
+
+  runApp(MyApp(camera: firstCamera));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final CameraDescription camera;
+  const MyApp({super.key, required this.camera});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Collect Assist Demo',
+      title: 'ID Scanner',
       theme: ThemeData(
-        // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const LoginPage(),
+      home: CollectRegistration(camera: camera),
     );
   }
 }
