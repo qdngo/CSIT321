@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 import bcrypt
 from ocr_utils import preprocess_image, perform_ocr, define_license_regions, map_ocr_to_fields, define_passport_regions, define_photo_card_regions
 from field_mappings import PHOTO_CARD_FIELDS, PASSPORT_FIELDS, DRIVER_LICENSE_FIELDS
+from nlp_utils import process_text  # Import the NLP post-processing function
 
 # Initialize the application
 app = FastAPI()
@@ -60,9 +61,17 @@ def save_file(file: UploadFile, folder: str = "uploads") -> str:
 
     return file_path
 
-@app.post("/process_driver_license/")
-async def process_driver_license(file: UploadFile = File(...)):
-    # Ensure the file is uploaded correctly
+async def process_document(file: UploadFile, region_func, doc_type: str) -> dict:
+    """
+    Common function to process a document:
+      1. Reads the file.
+      2. Preprocesses the image.
+      3. Determines the image size.
+      4. Defines OCR regions using the provided region function.
+      5. Performs OCR and maps the results to fields.
+      6. Applies post-processing to correct sticky text.
+    """
+    # Ensure the file is uploaded
     if not file:
         raise HTTPException(status_code=400, detail="File not uploaded.")
     
@@ -72,93 +81,44 @@ async def process_driver_license(file: UploadFile = File(...)):
     except Exception:
         raise HTTPException(status_code=400, detail="Failed to read the uploaded file.")
     
-    ''''''
     # Preprocess the image
     try:
         preprocessed_image = preprocess_image(image_data)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error during preprocessing: {str(e)}")
     
-    # image_size = preprocessed_image.shape[1], preprocessed_image.shape[0]  # (width, height)
-    # image_size = preprocessed_image.shape[:2]  # Get (height, width)
-    
-    # Determine image size
+    # Get image dimensions (width, height)
     try:
-        # Extract dimensions as (width, height)
-        image_size = preprocessed_image.size  # Get the image size
+        image_size = preprocessed_image.size
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error determining image size: {str(e)}")
-
-    # Define regions and map OCR results
+    
+    # Define regions, perform OCR, and map the results
     try:
-        regions = define_license_regions(image_size)
+        regions = region_func(image_size)
         ocr_results = perform_ocr(preprocessed_image)
-        extracted_data = map_ocr_to_fields(ocr_results, regions, doc_type="driver_license")
-        return {"doc_type": "driver_license", "extracted_data": extracted_data}
+        extracted_data = map_ocr_to_fields(ocr_results, regions, doc_type=doc_type)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error during OCR processing: {str(e)}")
+    
+    # Post-process each extracted field using the NLP function
+    for field, text in extracted_data.items():
+        if text:
+            extracted_data[field] = process_text(text)
+    
+    return {"doc_type": doc_type, "extracted_data": extracted_data}
 
+@app.post("/process_driver_license/")
+async def process_driver_license(file: UploadFile = File(...)):
+    return await process_document(file, define_license_regions, "driver_license")
 
 @app.post("/process_passport/")
 async def process_passport(file: UploadFile = File(...)):
-    # Ensure the file is uploaded correctly
-    if not file:
-        raise HTTPException(status_code=400, detail="File not uploaded.")
-    
-    # Read file data
-    try:
-        image_data = await file.read()
-    except Exception:
-        raise HTTPException(status_code=400, detail="Failed to read the uploaded file.")
-    
-    # Preprocess the image
-    try:
-        preprocessed_image = preprocess_image(image_data)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error during preprocessing: {str(e)}")
-
-    # Perform OCR
-    ocr_results = perform_ocr(preprocessed_image)
-
-    # Define bounding box regions for passport fields
-    passport_regions = define_passport_regions(preprocessed_image.size)
-
-    # Map OCR results to passport fields
-    # extracted_data = map_fields(ocr_results, passport_regions)
-    extracted_data = map_ocr_to_fields(ocr_results, passport_regions, doc_type="passport")
-
-    return {"doc_type": "passport", "extracted_data": extracted_data}
-
+    return await process_document(file, define_passport_regions, "passport")
 
 @app.post("/process_photo_card/")
 async def process_photo_card(file: UploadFile = File(...)):
-    # Ensure the file is uploaded correctly
-    if not file:
-        raise HTTPException(status_code=400, detail="File not uploaded.")
-    
-    # Read file data
-    try:
-        image_data = await file.read()
-    except Exception:
-        raise HTTPException(status_code=400, detail="Failed to read the uploaded file.")
-    
-    # Preprocess the image
-    try:
-        preprocessed_image = preprocess_image(image_data)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error during preprocessing: {str(e)}")
-
-    # Perform OCR
-    ocr_results = perform_ocr(preprocessed_image)
-
-    # Define bounding box regions for photo card fields
-    photo_card_regions = define_photo_card_regions(preprocessed_image.size)
-
-    # Map OCR results to photo card fields
-    #extracted_data = map_fields(ocr_results, photo_card_regions)
-    extracted_data = map_ocr_to_fields(ocr_results, photo_card_regions, doc_type="photo_card")
-
-    return {"doc_type": "photo_card", "extracted_data": extracted_data}
+    return await process_document(file, define_photo_card_regions, "photo_card")
 
     
 # --------------------------------------------------------------------------
