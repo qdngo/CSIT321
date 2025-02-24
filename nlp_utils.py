@@ -18,6 +18,7 @@ def fix_common_address_abbreviations(text: str) -> str:
     1) Add space after known abbreviations if they are not followed by whitespace.
     2) Add space before known abbreviations if they are not preceded by whitespace.
     3) Insert space around abbreviations if they appear in the middle of a word (e.g. JOHNSRDGREN).
+    4) Add space before the suburb abbreviation (e.g., WOLLONGONGNSW -> WOLLONGONG NSW).
     """
     abbreviations = ["ST", "RD", "AVE", "NSW", "VIC", "QLD", "SA", "WA", "TAS", "ACT", "NT"]
 
@@ -32,6 +33,13 @@ def fix_common_address_abbreviations(text: str) -> str:
         # Example: "([A-Za-z])RD([A-Za-z])" => "\1 RD \2"
         pattern_before = rf"([A-Za-z])({abbr})([A-Za-z])"
         text = re.sub(pattern_before, rf"\1 {abbr} \3", text, flags=re.IGNORECASE)
+
+        # Case C: Add space before the suburb abbreviation (e.g., WOLLONGONGNSW -> WOLLONGONG NSW)
+        pattern_suburb = rf"([A-Za-z])({abbr})"
+        text = re.sub(pattern_suburb, rf"\1 {abbr}", text, flags=re.IGNORECASE)
+
+    # Case D: Add space before the suburb code (e.g., NSW2500 -> NSW 2500)
+    text = re.sub(r'(\b[A-Z]{3})(\d{4}\b)', r'\1 \2', text)
 
     # Remove potential extra spaces
     text = re.sub(r"\s+", " ", text).strip()
