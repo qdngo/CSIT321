@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:sample_assist/collect_registration/camera_with_frame.dart';
 import 'package:sample_assist/collect_registration/camera_with_scan.dart';
 import 'package:sample_assist/collect_registration/processing_page.dart';
 import 'package:sample_assist/utils/consts.dart';
@@ -59,6 +59,32 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
     }
   }
 
+  Future<XFile?> pickAndCropImage() async {
+    final XFile? pickedFile =
+    await _imagePicker.pickImage(source: ImageSource.camera);
+
+    if (pickedFile != null) {
+      CroppedFile? croppedFile = await ImageCropper().cropImage(
+        sourcePath: pickedFile.path,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Cắt ảnh',
+            lockAspectRatio: false, // Giữ nguyên tỷ lệ đã đặt
+          ),
+          IOSUiSettings(
+            aspectRatioLockEnabled: false, // Khóa tỷ lệ
+          ),
+        ],
+      );
+
+      if (croppedFile != null) {
+        return XFile(croppedFile.path);
+      }
+    }
+
+    return null;
+  }
+
   //Method to take a photo using the camera
   Future<void> _takePhoto() async {
     final cameras = await availableCameras();
@@ -67,16 +93,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
     Future<void> initializeControllerFuture = controller.initialize();
 
     try {
-      final XFile? pickedFile = await Navigator.push(
-        // ignore: use_build_context_synchronously
-        context,
-        MaterialPageRoute(
-          builder: (context) => CameraWithFrame(
-            controller: controller,
-            initializeControllerFuture: initializeControllerFuture,
-          ),
-        ),
-      );
+      final XFile? pickedFile = await pickAndCropImage();
       if (pickedFile != null) {
         _uploadedPhoto = File(pickedFile.path);
 
@@ -253,7 +270,8 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
         dobController.text = data['date_of_birth'] ?? '';
         expiryController.text = data['expiry_date'] ?? '';
         sexController.text = data['gender'] ?? '';
-        idController.text = data['photo_card_number'] ?? data['license_number'] ?? '';
+        idController.text =
+            data['photo_card_number'] ?? data['license_number'] ?? '';
 
         setState(() {});
       } else {
