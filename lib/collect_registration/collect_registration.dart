@@ -68,7 +68,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
         sourcePath: pickedFile.path,
         uiSettings: [
           AndroidUiSettings(
-            toolbarTitle: 'Cắt ảnh',
+            toolbarTitle: 'Crop image',
             lockAspectRatio: false, // Giữ nguyên tỷ lệ đã đặt
           ),
           IOSUiSettings(
