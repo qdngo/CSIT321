@@ -1,18 +1,21 @@
-# CSIT321
-Capstone Project - Armadillo
-Armadillo: AI-Powered Patient Identity and Security Management System
+# sample_assist
 
-Welcome to the Armadillo project! This repository contains the source code, documentation, and resources for a patient identity and security management system, developed as part of the University of Wollongong’s CSIT321 project in collaboration with Sample Assist Pty Ltd.
+A new Flutter project.
 
-Project Overview
+## Getting Started
 
-The Armadillo project aims to solve two critical challenges in healthcare:
+This project is a starting point for a Flutter application.
 
-	1.	Patient Identity Verification: Utilizing Optical Character Recognition (OCR) to automate and improve patient identity verification.
-	2.	Data Security and Anomaly Detection: Enhancing data security using Machine Learning (ML) models to detect threats and anomalies in patient records.
+A few resources to get you started if this is your first Flutter project:
 
-This project integrates advanced AI tools to automate administrative processes, reduce human error, improve data integrity, and enhance operational efficiency in healthcare environments.
+- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
 
+<<<<<<< HEAD
+For help getting started with Flutter development, view the
+[online documentation](https://docs.flutter.dev/), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.
+=======
 Features
 
 	•	OCR-Driven Identity Verification
@@ -45,3 +48,4 @@ pip install python-multipart
 For future schema updates:
 alembic revision --autogenerate -m "Describe the change here"
 alembic upgrade head
+>>>>>>> 3990acbca691240cae609473e253cb960aba6487
