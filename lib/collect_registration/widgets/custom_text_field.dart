@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 class CustomTextField extends StatelessWidget {
   final String label;
   final TextEditingController? controller;
+  final bool? isValidate;
   const CustomTextField({
     required this.label,
     this.controller, // Add the controller to the constructor
+    this.isValidate = true,
     super.key,
   });
 
@@ -16,7 +18,7 @@ class CustomTextField extends StatelessWidget {
         const SizedBox(height: 8),
         TextFormField(
           validator: (value) {
-            if (value == null || value.isEmpty) {
+            if (value == null || value.isEmpty && isValidate!) {
               return 'This field is required';
             }
             return null;

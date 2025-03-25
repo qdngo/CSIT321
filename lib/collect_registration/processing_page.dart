@@ -7,8 +7,7 @@ class ProcessingPage extends StatefulWidget {
   State<ProcessingPage> createState() => _ProcessingPageState();
 }
 
-class _ProcessingPageState extends State<ProcessingPage>
-    with TickerProviderStateMixin {
+class _ProcessingPageState extends State<ProcessingPage> with TickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 

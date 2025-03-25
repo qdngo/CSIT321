@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sample_assist/collect_registration/collect_registration.dart';
 import 'package:sample_assist/login/login_page.dart';
 
 void main() {

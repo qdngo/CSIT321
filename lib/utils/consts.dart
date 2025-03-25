@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-String baseUri = "http://34.44.73.114:9090";
+String baseUri = "http://34.133.75.144:9090";
+
 
 String pathProcessDriverLicense = '/process_driver_license/';
 String pathProcessPassport = '/process_passport/';

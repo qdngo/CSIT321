@@ -68,7 +68,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
         sourcePath: pickedFile.path,
         uiSettings: [
           AndroidUiSettings(
-            toolbarTitle: 'Crop image',
+            toolbarTitle: 'Cắt ảnh',
             lockAspectRatio: false, // Giữ nguyên tỷ lệ đã đặt
           ),
           IOSUiSettings(
@@ -90,7 +90,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
     final cameras = await availableCameras();
     CameraController controller =
     CameraController(cameras.first, ResolutionPreset.high);
-    Future<void> initializeControllerFuture = controller.initialize();
+    controller.initialize();
 
     try {
       final XFile? pickedFile = await pickAndCropImage();
@@ -244,7 +244,6 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
 
       // Kiểm tra file có tồn tại không
       if (!await file.exists()) {
-        print('File không tồn tại.');
         return;
       }
 
@@ -282,28 +281,10 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
     }
   }
 
-  void _showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Error"),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text("OK"),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _deletePhoto() {
-    // Delete the photo and update the state
     setState(() {
       _uploadedPhoto = null;
     });
-    print("Photo deleted");
   }
 
   @override
@@ -403,6 +384,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
                     CustomTextField(
                       label: 'Phone Number (Optional)',
                       controller: phoneNumberController,
+                      isValidate: false,
                     ),
                     const SizedBox(height: 16),
                     if (selectedPhotoIDType == "Driver's License" ||
@@ -417,8 +399,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
                     const SizedBox(height: 16),
                     ActionButtons(
                       formKey: _formKey,
-                      path: getPathStorege(),
-                      body: getBody(),
+                      onTap: storeDriverLicense,
                     ),
                   ],
                 ),
@@ -428,6 +409,47 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
         ),
       ),
     );
+  }
+
+  Future<void> storeDriverLicense() async {
+    String url = '$baseUri${getPathStorege()}';
+    const Map<String, String> headers = {
+      'accept': 'application/json',
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: headers,
+        body: jsonEncode(getBody()),
+      );
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        showDialog(
+          context: context,
+          builder: (context) => const AlertDialog(
+            title: Text("Success!"),
+            content: Text("Your data has been saved successfully!"),
+          ),
+        );
+      } else {
+        showDialog(
+          context: context,
+          builder: (context) => const AlertDialog(
+            title: Text("Fail!"),
+            content: Text("Your data has been saved fail!"),
+          ),
+        );
+      }
+    } catch (e) {
+      showDialog(
+        context: context,
+        builder: (context) => const AlertDialog(
+          title: Text("Fail!"),
+          content: Text("Your data has been saved fail!"),
+        ),
+      );
+    }
   }
 }
 
