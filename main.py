@@ -10,8 +10,7 @@ from pydantic import BaseModel, EmailStr, Field
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 import bcrypt
-from ocr_utils import preprocess_image, perform_ocr, define_license_regions, map_ocr_to_fields, define_passport_regions, define_photo_card_regions
-from field_mappings import PHOTO_CARD_FIELDS, PASSPORT_FIELDS, DRIVER_LICENSE_FIELDS
+from ocr_utils import *
 from nlp_utils import process_text  # Import the NLP post-processing function
 
 # Initialize the application
@@ -43,7 +42,7 @@ db_dependency = Annotated[Session, Depends(get_db)]
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the OCR Backend!"}
+    return {"message": "Welcome to the Armadillo Backend!"}
 
 
 # ---------------------------- IMAGE PROCESSING FUNCTIONS ----------------------------
@@ -95,21 +94,63 @@ async def process_document(file: UploadFile, region_func, doc_type: str) -> dict
     
     # Define regions, perform OCR, and map the results
     try:
+        ocr_results = perform_ocr(preprocessed_image, debug=True)
         regions = region_func(image_size)
-        ocr_results = perform_ocr(preprocessed_image)
-        extracted_data = map_ocr_to_fields(ocr_results, regions, doc_type=doc_type)
+        state_code1 = detect_state_from_text(ocr_results)
+
+        if doc_type == "driver_license":
+            if state_code1 == "NSW":
+                regions = define_nsw_license_regions(image_size)
+            elif state_code1 == "VIC":
+                regions = define_vic_license_regions(image_size)
+            elif state_code1 == "QLD":
+                regions = define_qld_license_regions(image_size)
+            elif state_code1 == "SA":
+                regions = define_sa_license_regions(image_size)
+            elif state_code1 == "WA":
+                regions = define_wa_license_regions(image_size)
+            elif state_code1 == "TAS":
+                regions = define_tas_license_regions(image_size)
+            elif state_code1 == "ACT":
+                regions = define_act_license_regions(image_size)
+            elif state_code1 == "NT":
+                regions = define_nt_license_regions(image_size)
+            else:
+                raise HTTPException(status_code=400, detail="Unable to detect state from license.")
+        else:
+            regions = region_func(image_size)
+        
+        
+        #draw_ocr_boxes(preprocessed_image, ocr_results)
+        #log_normalized_bboxes(ocr_results, image_size)
+        
+        
+        extracted_data = map_ocr_to_fields(ocr_results, regions, doc_type=doc_type, state_code=state_code1)
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error during OCR processing: {str(e)}")
     
     # Post-process each extracted field using the NLP function
     for field, text in extracted_data.items():
         if text:
-            extracted_data[field] = process_text(text)
+            extracted_data[field] = process_text(text, field_name=field, doc_type=doc_type, state_code=state_code1)
     
     return {"doc_type": doc_type, "extracted_data": extracted_data}
 
+
+def define_license_regions(image_size: tuple) -> dict:
+    """
+    Dummy function placeholder — actual region is selected in `process_document()`
+    based on the detected state.
+    """
+    return {}
+
 @app.post("/process_driver_license/")
 async def process_driver_license(file: UploadFile = File(...)):
+    """
+    Handles uploaded NSW, VIC, QLD, ACT, and other AU driver licenses.
+    Uses state-specific field mapping based on OCR-detected state code.
+    """
     return await process_document(file, define_license_regions, "driver_license")
 
 @app.post("/process_passport/")
