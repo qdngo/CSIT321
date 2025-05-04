@@ -1,11 +1,18 @@
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:sample_assist/utils/consts.dart';
 
 class ActionButtons extends StatelessWidget {
   final GlobalKey<FormState> formKey;
-  final Future<void> Function() onTap;
+  final Map<String, dynamic> body;
+  final String path;
   const ActionButtons({
     required this.formKey,
-    required this.onTap,
+    required this.body,
+    required this.path,
     super.key,
   });
 
@@ -37,7 +44,7 @@ class ActionButtons extends StatelessWidget {
           ),
           onPressed: () {
             if (formKey.currentState!.validate()) {
-              onTap();
+              storeDriverLicense(path, body);
             }
           },
           child: const Text(
@@ -51,5 +58,36 @@ class ActionButtons extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Future<void> storeDriverLicense(
+      String path, Map<String, dynamic> body) async {
+    String url = '$baseUri$path';
+    const Map<String, String> headers = {
+      'accept': 'application/json',
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: headers,
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        if (kDebugMode) {
+          print("Success: ${response.body}");
+        }
+      } else {
+        if (kDebugMode) {
+          print("Error: ${response.statusCode} - ${response.body}");
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Request failed: $e");
+      }
+    }
   }
 }

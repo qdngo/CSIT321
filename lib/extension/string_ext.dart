@@ -25,4 +25,20 @@ extension TextProcessing on String {
     }
     return false;
   }
+
+  bool isDate() {
+    RegExp regex = RegExp(r'^\d{2}[a-zA-Z/]*\d{4}$');
+    if (regex.hasMatch(this)) {
+      return true;
+    }
+    return false;
+  }
+
+  bool isNumber() {
+    RegExp regex = RegExp(r'^\d+$');
+    if (regex.hasMatch(this)) {
+      return true;
+    }
+    return false;
+  }
 }

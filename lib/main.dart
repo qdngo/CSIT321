@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
 import 'package:sample_assist/collect_registration/collect_registration.dart';
 import 'package:sample_assist/login/login_page.dart';
 
-void main() {
+var logger = Logger(
+  printer: PrettyPrinter(),
+  filter: null,
+  output: null,
+);
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   runApp(const MyApp());
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

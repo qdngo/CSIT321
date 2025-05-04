@@ -1,12 +1,22 @@
 import 'dart:io';
 import 'package:camera/camera.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:sample_assist/extension/string_ext.dart';
+import '../model/scan_model.dart';
+import 'package:sample_assist/main.dart';
+import 'package:sample_assist/utils/consts.dart';
+import 'package:collection/collection.dart';
+
 
 class ScanCameraScreen extends StatefulWidget {
-  const ScanCameraScreen({super.key});
+  const ScanCameraScreen({
+    super.key,
+    required this.type,
+  });
+
+  final String type;
 
   @override
   State<ScanCameraScreen> createState() => _ScanCameraScreenState();
@@ -27,6 +37,7 @@ class _ScanCameraScreenState extends State<ScanCameraScreen> {
   Future<void> _initCamera() async {
     final status = await Permission.camera.request();
     if (status.isDenied) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Need camera permission")));
       return;
@@ -42,17 +53,14 @@ class _ScanCameraScreenState extends State<ScanCameraScreen> {
       });
 
       _cameraController?.startImageStream((image) async {
-        if (!isBlocked) {
-          isBlocked = true;
-          await _takePictureAndScan();
-        }
+        await _takePictureAndScan();
       });
     }
   }
 
   Future<void> _takePictureAndScan() async {
+    await Future.delayed(const Duration(seconds: 4));
     if (_cameraController == null || !_cameraController!.value.isInitialized) {
-      isBlocked = false;
       return;
     }
 
@@ -62,10 +70,7 @@ class _ScanCameraScreenState extends State<ScanCameraScreen> {
         await _scanText(imageFile);
       });
     } catch (e) {
-      isBlocked = false;
-      if (kDebugMode) {
-        print("Take picture error: $e");
-      }
+      logger.e("Take picture error: $e");
     }
   }
 
@@ -77,14 +82,72 @@ class _ScanCameraScreenState extends State<ScanCameraScreen> {
 
     final rawText = recognizedText.text.toUpperCase();
 
-    if (rawText.contains('DRIVER LICENCE') &&
+    if ((rawText.contains('DRIVER LICENCE') ||
+        rawText.contains('PASSPORT') ||
+        rawText.contains('NATIONAL')) &&
         rawText.contains('LICENCE NO') &&
         rawText.contains('DATE OF BIRTH')) {
-      textRecognizer.close();
+      final ScanModel model = ScanModel();
       final textSplit = rawText.split(RegExp(r'\r?\n'));
-      Navigator.pop(context, textSplit);
+
+      model.filePath = imageFile.path;
+      detachDataLocal(model, textSplit);
+      Navigator.pop(context, model);
     }
-    isBlocked = false;
+  }
+
+  Future<void> detachDataLocal(ScanModel model, List<String> textSplit) async {
+    final iLicenceNo = textSplit.indexOf('LICENCE NO') + 1;
+    final iDoB = textSplit.indexOf('DATE OF BIRTH') + 1;
+    int count = 0;
+    String address = '';
+    String name = textSplit.firstWhere((e) {
+      if (e.isName() &&
+          !e.contains('LICENCE') &&
+          !e.contains('DRIVING') &&
+          !e.contains('AUSTRALIAN')) {
+        return true;
+      }
+      return false;
+    });
+    for (var result in textSplit) {
+      if (result.isAddress()) {
+        count++;
+        address += '$result ';
+      }
+      if (count >= 2) {
+        break;
+      }
+    }
+
+    model.firstName = name;
+    model.address = address;
+    final licenseNo = textSplit[iLicenceNo];
+    final dob = textSplit[iDoB];
+
+    if (dob.isDate()) {
+      model.dateOfBirth = dob;
+    } else {
+      model.dateOfBirth = textSplit.firstWhereOrNull((e) => e.isDate());
+    }
+
+    if (int.tryParse(licenseNo) != null) {
+      model.licenseNumber = licenseNo;
+    } else {
+      model.licenseNumber = textSplit.firstWhereOrNull((e) => e.isNumber());
+    }
+  }
+
+  String get endPoint {
+    switch (widget.type) {
+      case "Driver's License":
+        return pathProcessDriverLicense;
+      case "Passport":
+        return pathProcessPassport;
+      case "National ID":
+        return pathProcessPhotoCard;
+    }
+    return '';
   }
 
   @override
