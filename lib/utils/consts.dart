@@ -9,6 +9,9 @@ String pathProcessPhotoCard = '/process_photo_card/';
 String pathStoreDriverLicense = '/store_driver_license/';
 String pathStorePassport = '/store_passport/';
 String pathStorePhotoCard = '/store_photo_card/';
+String pathGetPassport ='/get-passport/';
+String pathGetPhotoCard ='/get-photo-card/';
+String pathGetDriverLicense ='/get-driver-license/';
 String loginUri = "$baseUri/login";
 String registerUri = "$baseUri/signup";
 
