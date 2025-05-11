@@ -7,6 +7,7 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:sample_assist/collect_registration/processing_page.dart';
 import 'package:sample_assist/collect_registration/scan_camera_screen.dart';
+import 'package:sample_assist/collect_registration/services/fetch_api.dart';
 import 'package:sample_assist/extension/string_ext.dart';
 import 'package:sample_assist/main.dart';
 import 'package:sample_assist/model/scan_model.dart';
@@ -27,12 +28,14 @@ class CollectRegistration extends StatefulWidget {
   @override
   State<CollectRegistration> createState() => _CollectRegistrationScreenState();
 }
+
 class _CollectRegistrationScreenState extends State<CollectRegistration> {
   final _formKey = GlobalKey<FormState>();
+  bool isError = true;
   String? selectedPhotoIDType;
   final ImagePicker _imagePicker = ImagePicker();
   File? _uploadedPhoto;
-  bool isLoading = false;
+  bool isLoading = true;
 
   final idController = TextEditingController();
   final nationalController = TextEditingController();
@@ -377,6 +380,77 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
   }
 
   @override
+  initState() {
+    super.initState();
+    // Call the API to get the photo card
+    initData();
+  }
+
+  Future<void> initData() async {
+    // call api lấy data
+    final responsePhotoCar = await FetchApi.getInfoCard(widget.email);
+    final responsePassport = await FetchApi.getInfoPassport(widget.email);
+    final responseDriverLicense =
+    await FetchApi.getInfoDriverLicense(widget.email);
+
+    if (responsePhotoCar.isNotEmpty ||
+        responsePassport.isNotEmpty ||
+        responseDriverLicense.isNotEmpty) {
+      // check xem có dữ liệu hay không rồi chuyển trạng thái
+      setState(() {
+        isError = false;
+        isLoading = false;
+
+        // fill dữ liệu vào các trường
+        if (responsePhotoCar.isNotEmpty) {
+          idController.text = responsePhotoCar.first.cardNumber.toString();
+
+          expiryController.text =
+          responsePhotoCar.first.expiryDate.toString().split(' ')[0];
+          cardNumberController.text =
+              responsePhotoCar.first.photoCardNumber.toString();
+          firstNameController.text =
+              responsePhotoCar.first.firstName.toString();
+          lastNameController.text = responsePhotoCar.first.lastName.toString();
+          addressController.text = responsePhotoCar.first.address.toString();
+          sexController.text = responsePhotoCar.first.toString();
+          dobController.text =
+          responsePhotoCar.first.dateOfBirth.toString().split(' ')[0];
+          selectedPhotoIDType = 'National ID';
+        } else if (responsePassport.isNotEmpty) {
+          idController.text = responsePassport.first.documentNumber.toString();
+          expiryController.text =
+          responsePassport.first.expiryDate.toString().split(' ')[0];
+          cardNumberController.text =
+              responsePassport.first.documentNumber.toString();
+          firstNameController.text =
+              responsePassport.first.firstName.toString();
+          lastNameController.text = responsePassport.first.lastName.toString();
+          sexController.text = responsePassport.first.gender.toString();
+          dobController.text =
+          responsePassport.first.dateOfBirth.toString().split(' ')[0];
+          selectedPhotoIDType = 'Passport';
+        } else if (responseDriverLicense.isNotEmpty) {
+          idController.text = responseDriverLicense.first.cardNumber.toString();
+          expiryController.text =
+          responseDriverLicense.first.expiryDate.toString().split(' ')[0];
+          cardNumberController.text =
+              responseDriverLicense.first.cardNumber.toString();
+          firstNameController.text =
+              responseDriverLicense.first.firstName.toString();
+          lastNameController.text =
+              responseDriverLicense.first.lastName.toString();
+          addressController.text =
+              responseDriverLicense.first.address.toString();
+          dobController.text =
+          responseDriverLicense.first.dateOfBirth.toString().split(' ')[0];
+          selectedPhotoIDType = 'Driver\'s License';
+        }
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -386,7 +460,9 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
         ),
         backgroundColor: const Color(0xFF01B4D2),
       ),
-      body: SingleChildScrollView(
+      body: isError
+          ? _buildCallApiError()
+          : SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -498,6 +574,17 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCallApiError() {
+    return Center(
+      child: isLoading
+          ? CircularProgressIndicator()
+          : Text(
+        'Error calling API',
+        style: TextStyle(color: Colors.red),
       ),
     );
   }
