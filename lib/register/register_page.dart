@@ -198,7 +198,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                             ),
                             validator: (text) {
-                              if (text?.isNotEmpty == true && text!.length > 6) {
+                              if (text?.isNotEmpty == true && text!.length > 4) {
                                 return null;
                               } else {
                                 return 'Invalid Password!';
