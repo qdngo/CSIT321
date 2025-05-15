@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:provider/provider.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
@@ -19,6 +21,7 @@ import 'widgets/dropdown_field.dart';
 import 'widgets/custom_text_field.dart';
 import 'widgets/action_buttons.dart';
 import 'widgets/section_header.dart';
+import 'widgets/theme_provider.dart';
 import 'package:http/http.dart' as http;
 
 class CollectRegistration extends StatefulWidget {
@@ -36,6 +39,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
   final ImagePicker _imagePicker = ImagePicker();
   File? _uploadedPhoto;
   bool isLoading = true;
+  bool _isPanelOpen = false;  // Track whether the panel is open or closed
 
   final idController = TextEditingController();
   final nationalController = TextEditingController();
@@ -48,6 +52,20 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
   final dobController = TextEditingController();
   final mobileNumberController = TextEditingController();
   final phoneNumberController = TextEditingController();
+
+  final PanelController _panelController = PanelController();  // Controller for the sliding panel
+
+  // Method to toggle the panel's state
+  void _togglePanel() {
+    if (_isPanelOpen) {
+      _panelController.close();
+    } else {
+      _panelController.open();
+    }
+    setState(() {
+      _isPanelOpen = !_isPanelOpen;
+    });
+  }
 
   // Method to get a photo from the gallery
   Future<void> _getPhotoFromGallery() async {
@@ -379,6 +397,67 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
     logger.e("Photo deleted");
   }
 
+  Future<void> _handleSignOut() async {
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Logout'),
+        content: const Text('Are you sure you want to log out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Log out'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldLogout ?? false) {
+      // Clear form state
+      setState(() {
+        _uploadedPhoto = null;
+        selectedPhotoIDType = null;
+        idController.clear();
+        nationalController.clear();
+        expiryController.clear();
+        cardNumberController.clear();
+        firstNameController.clear();
+        lastNameController.clear();
+        addressController.clear();
+        sexController.clear();
+        dobController.clear();
+        mobileNumberController.clear();
+        phoneNumberController.clear();
+      });
+
+      // Show success dialog
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Logged out'),
+          content: const Text('You have been logged out successfully.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+
+      // Navigate to login screen
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const MyApp()),
+            (route) => false,
+      );
+    }
+  }
+
   @override
   initState() {
     super.initState();
@@ -458,125 +537,181 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
           'Collector Registration',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: _togglePanel,
+          ),
+        ],
         backgroundColor: const Color(0xFF01B4D2),
       ),
-      body: isError
-          ? _buildCallApiError()
-          : SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 16),
-            const StepIndicator(),
-            const SizedBox(height: 16),
-            const SectionTitle(title: '1. Collector Identity'),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SectionHeader(title: 'PHOTO ID'),
-                    const SizedBox(height: 16),
-                    DropdownField(
-                      hint: 'Please select a type of Photo ID',
-                      items: const [
-                        'Passport',
-                        'Driver\'s License',
-                        'National ID'
+      body: Stack(
+        children: [
+          // Main content with error check
+          isError
+              ? _buildCallApiError()
+              : SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 16),
+                const StepIndicator(),
+                const SizedBox(height: 16),
+                const SectionTitle(title: '1. Collector Identity'),
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SectionHeader(title: 'PHOTO ID'),
+                        const SizedBox(height: 16),
+                        DropdownField(
+                          hint: 'Please select a type of Photo ID',
+                          items: const [
+                            'Passport',
+                            'Driver\'s License',
+                            'National ID'
+                          ],
+                          value: selectedPhotoIDType,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedPhotoIDType = value;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                        PhotoIdSection(
+                          uploadedPhoto: _uploadedPhoto,
+                          getPhotoFromGallery: _getPhotoFromGallery,
+                          takePhoto: _takePhoto,
+                          scanPhoto: _scanImage,
+                          watchPhoto: _showFullPhotoDialog,
+                          deletePhoto: _deletePhoto,
+                          isCheck: selectedPhotoIDType != null,
+                        ),
+                        CustomTextField(
+                          label: 'Photo ID Document Number',
+                          controller: idController,
+                        ),
+                        CustomTextField(
+                          label: 'Nationality',
+                          controller: nationalController,
+                        ),
+                        CustomTextField(
+                          label: 'Expiry Date',
+                          controller: expiryController,
+                        ),
+                        if (selectedPhotoIDType == "Driver's License" ||
+                            selectedPhotoIDType == "National ID")
+                          CustomTextField(
+                            label: 'Card Number',
+                            controller: cardNumberController,
+                          ),
+                        const SizedBox(height: 16),
+                        const SectionHeader(title: 'PERSONAL DETAILS'),
+                        CustomTextField(
+                          label: 'First Name',
+                          controller: firstNameController,
+                        ),
+                        CustomTextField(
+                          label: 'Last Name',
+                          controller: lastNameController,
+                        ),
+                        if (selectedPhotoIDType == "Passport")
+                          CustomTextField(
+                            label: 'Sex',
+                            controller: sexController,
+                          ),
+                        CustomTextField(
+                          label: 'Date of Birth',
+                          controller: dobController,
+                        ),
+                        const SizedBox(height: 16),
+                        const SectionHeader(title: 'CONTACT INFORMATION'),
+                        CustomTextField(
+                          label: 'Mobile Number',
+                          controller: mobileNumberController,
+                        ),
+                        CustomTextField(
+                          label: 'Phone Number (Optional)',
+                          controller: phoneNumberController,
+                        ),
+                        const SizedBox(height: 16),
+                        if (selectedPhotoIDType == "Driver's License" ||
+                            selectedPhotoIDType == "National ID")
+                          const SectionHeader(title: 'ADDRESS'),
+                        if (selectedPhotoIDType == "Driver's License" ||
+                            selectedPhotoIDType == "National ID")
+                          CustomTextField(
+                            label: 'Address',
+                            controller: addressController,
+                          ),
+                        const SizedBox(height: 16),
+                        ActionButtons(
+                          formKey: _formKey,
+                          path: getPathStorage(),
+                          body: getBody(),
+                        ),
                       ],
-                      value: selectedPhotoIDType,
-                      onChanged: (value) {
-                        setState(() {
-                          selectedPhotoIDType = value;
-                        });
-                      },
                     ),
-                    const SizedBox(height: 8),
-                    PhotoIdSection(
-                      uploadedPhoto: _uploadedPhoto,
-                      getPhotoFromGallery: _getPhotoFromGallery,
-                      takePhoto: _takePhoto,
-                      scanPhoto: _scanImage,
-                      watchPhoto: _showFullPhotoDialog,
-                      deletePhoto: _deletePhoto,
-                      // Provide the watch photo callback
-                      isCheck: selectedPhotoIDType != null,
-                    ),
-                    CustomTextField(
-                      label: 'Photo ID Document Number',
-                      controller: idController,
-                    ),
-                    CustomTextField(
-                      label: 'Nationality',
-                      controller: nationalController,
-                    ),
-                    CustomTextField(
-                      label: 'Expiry Date',
-                      controller: expiryController,
-                    ),
-                    if (selectedPhotoIDType == "Driver's License" ||
-                        selectedPhotoIDType == "National ID")
-                      CustomTextField(
-                        label: 'Card Number',
-                        controller: cardNumberController,
-                      ),
-                    const SizedBox(height: 16),
-                    const SectionHeader(title: 'PERSONAL DETAILS'),
-                    CustomTextField(
-                      label: 'First Name',
-                      controller: firstNameController,
-                    ),
-                    CustomTextField(
-                      label: 'Last Name',
-                      controller: lastNameController,
-                    ),
-                    if (selectedPhotoIDType == "Passport")
-                      CustomTextField(
-                        label: 'Sex',
-                        controller: sexController,
-                      ),
-                    CustomTextField(
-                      label: 'Date of Birth',
-                      controller: dobController,
-                    ),
-                    const SizedBox(height: 16),
-                    const SectionHeader(title: 'CONTACT INFORMATION'),
-                    CustomTextField(
-                      label: 'Mobile Number',
-                      controller: mobileNumberController,
-                    ),
-                    CustomTextField(
-                      label: 'Phone Number (Optional)',
-                      controller: phoneNumberController,
-                    ),
-                    const SizedBox(height: 16),
-                    if (selectedPhotoIDType == "Driver's License" ||
-                        selectedPhotoIDType == "National ID")
-                      const SectionHeader(title: 'ADDRESS'),
-                    if (selectedPhotoIDType == "Driver's License" ||
-                        selectedPhotoIDType == "National ID")
-                      CustomTextField(
-                        label: 'Address',
-                        controller: addressController,
-                      ),
-                    const SizedBox(height: 16),
-                    ActionButtons(
-                      formKey: _formKey,
-                      path: getPathStorage(),
-                      body: getBody(),
-                    ),
-                  ],
+                  ),
                 ),
+              ],
+            ),
+          ),
+
+          // Settings Panel
+          SlidingUpPanel(
+            controller: _panelController,
+            minHeight: 0,
+            maxHeight: 300,
+            panel: Container(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Settings', style: Theme.of(context).textTheme.titleLarge),
+                  const Divider(),
+                  ListTile(
+                    leading: const Icon(Icons.dark_mode),
+                    title: const Text('Dark Mode'),
+                    onTap: () {
+                      final themeProvider = context.read<ThemeProvider>();
+                      themeProvider.toggleTheme(!themeProvider.isDarkMode);
+                      _panelController.close();
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.exit_to_app),
+                    title: const Text('Sign Out'),
+                    onTap: () async {
+                      await _panelController.close();
+                      await _handleSignOut();
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.delete),
+                    title: const Text('Delete Account'),
+                    onTap: () {
+                      // TODO: Add delete logic
+                      _panelController.close();
+                    },
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+            onPanelOpened: () => setState(() => _isPanelOpen = true),
+            onPanelClosed: () => setState(() => _isPanelOpen = false),
+          ),
+        ],
       ),
     );
   }
+
 
   Widget _buildCallApiError() {
     return Center(

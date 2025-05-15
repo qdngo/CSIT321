@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
-import 'package:sample_assist/collect_registration/collect_registration.dart';
+import 'package:provider/provider.dart';
 import 'package:sample_assist/login/login_page.dart';
+import 'package:sample_assist/collect_registration/widgets/theme_provider.dart'; // <- Add your ThemeProvider file
 
 var logger = Logger(
   printer: PrettyPrinter(),
@@ -12,23 +13,40 @@ var logger = Logger(
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Collect Assist Demo',
-        theme: ThemeData(
-          // tested with just a hot reload.
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-          useMaterial3: true,
+      debugShowCheckedModeBanner: false,
+      title: 'Collect Assist Demo',
+      themeMode: themeProvider.themeMode,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+          brightness: Brightness.light,
         ),
-        home: const LoginPage());
+        useMaterial3: true,
+      ),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blueGrey,
+          brightness: Brightness.dark,
+        ),
+        useMaterial3: true,
+      ),
+      home: const LoginPage(),
+    );
   }
 }
