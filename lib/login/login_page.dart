@@ -59,12 +59,14 @@ class _LoginPageState extends State<LoginPage> {
 
           Future.delayed(const Duration(seconds: 2), () {
             if (!mounted) return;
-            Navigator.of(context).pop(); // Dismiss the dialog
-            Navigator.of(context).pushReplacement(MaterialPageRoute(
-              builder: (context) => CollectRegistration(
-                email: _email.text,
-              ),
-            ));
+            Navigator.of(context).pop(); // Close dialog
+
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => CollectRegistration(email: _email.text)),
+                    (Route<dynamic> route) => false, // Removes all previous routes
+              );
+            });
           });
         } else {
           _showErrorDialog("Failed to retrieve token.");
