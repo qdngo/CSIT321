@@ -49,7 +49,26 @@ class _LoginPageState extends State<LoginPage> {
           print("Access Token: $token");
 
           // Navigate to CollectRegistration on success
-          showDialog(
+          // showDialog(
+          //   context: context,
+          //   builder: (context) => const AlertDialog(
+          //     title: Text("Success!"),
+          //     content: Text("Log In Successful!"),
+          //   ),
+          // );
+          //
+          // Future.delayed(const Duration(seconds: 2), () {
+          //   if (!mounted) return;
+          //   Navigator.of(context).pop(); // Close dialog
+          //
+          //   WidgetsBinding.instance.addPostFrameCallback((_) {
+          //     Navigator.of(context).pushAndRemoveUntil(
+          //       MaterialPageRoute(builder: (context) => CollectRegistration(email: _email.text)),
+          //           (Route<dynamic> route) => false, // Removes all previous routes
+          //     );
+          //   });
+          // });
+          await showDialog(
             context: context,
             builder: (context) => const AlertDialog(
               title: Text("Success!"),
@@ -57,17 +76,13 @@ class _LoginPageState extends State<LoginPage> {
             ),
           );
 
-          Future.delayed(const Duration(seconds: 2), () {
-            if (!mounted) return;
-            Navigator.of(context).pop(); // Close dialog
+// Only navigates *after* dialog is dismissed
+          if (!mounted) return;
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => CollectRegistration(email: _email.text)),
+                (Route<dynamic> route) => false,
+          );
 
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => CollectRegistration(email: _email.text)),
-                    (Route<dynamic> route) => false, // Removes all previous routes
-              );
-            });
-          });
         } else {
           _showErrorDialog("Failed to retrieve token.");
         }
