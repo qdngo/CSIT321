@@ -39,7 +39,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
   final ImagePicker _imagePicker = ImagePicker();
   File? _uploadedPhoto;
   bool isLoading = true;
-  bool _isPanelOpen = false;  // Track whether the panel is open or closed
+  bool _isPanelOpen = false; // Track whether the panel is open or closed
 
   final idController = TextEditingController();
   final nationalController = TextEditingController();
@@ -53,7 +53,8 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
   final mobileNumberController = TextEditingController();
   final phoneNumberController = TextEditingController();
 
-  final PanelController _panelController = PanelController();  // Controller for the sliding panel
+  final PanelController _panelController =
+  PanelController(); // Controller for the sliding panel
 
   // Method to toggle the panel's state
   void _togglePanel() {
@@ -477,7 +478,6 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
         responseDriverLicense.isNotEmpty) {
       // check xem có dữ liệu hay không rồi chuyển trạng thái
       setState(() {
-        isError = false;
         isLoading = false;
 
         // fill dữ liệu vào các trường
@@ -526,6 +526,10 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
           selectedPhotoIDType = 'Driver\'s License';
         }
       });
+    } else {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -548,7 +552,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
       body: Stack(
         children: [
           // Main content with error check
-          isError
+          isLoading
               ? _buildCallApiError()
               : SingleChildScrollView(
             child: Column(
@@ -674,7 +678,8 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Settings', style: Theme.of(context).textTheme.titleLarge),
+                  Text('Settings',
+                      style: Theme.of(context).textTheme.titleLarge),
                   const Divider(),
                   ListTile(
                     leading: const Icon(Icons.dark_mode),
@@ -712,15 +717,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
     );
   }
 
-
   Widget _buildCallApiError() {
-    return Center(
-      child: isLoading
-          ? CircularProgressIndicator()
-          : Text(
-        'Error calling API',
-        style: TextStyle(color: Colors.red),
-      ),
-    );
+    return Center(child: CircularProgressIndicator());
   }
 }
