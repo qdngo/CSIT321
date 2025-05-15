@@ -436,3 +436,22 @@ def get_driver_license(email: str, db: Session = Depends(get_db)):
     if not driver_licenses:
         return {"status": "No driver licenses found for the given email."}
     return driver_licenses
+
+# ---------------------------- DELETE ACCOUNT ENDPOINTS ----------------------------
+@app.delete("/delete_account")
+def delete_account(email: str = Query(...), db: Session = Depends(get_db)):
+    # Get the user
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Delete associated records
+    db.query(PhotoCard).filter(PhotoCard.email == email).delete()
+    db.query(DriverLicense).filter(DriverLicense.email == email).delete()
+    db.query(Passport).filter(Passport.email == email).delete()
+
+    # Delete the user
+    db.delete(user)
+    db.commit()
+
+    return {"message": "User account and all associated data deleted successfully"}
