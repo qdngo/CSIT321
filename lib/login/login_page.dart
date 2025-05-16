@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
@@ -23,9 +24,9 @@ class _LoginPageState extends State<LoginPage> {
 
   bool _isPasswordVisible = false;
 
-  Future<void> _login() async {
+  Future<bool?> _login() async {
     if (_formKey.currentState?.validate() != true) {
-      return;
+      return null;
     }
 
     try {
@@ -45,44 +46,9 @@ class _LoginPageState extends State<LoginPage> {
         final String? token = data['access_token'];
 
         if (token != null) {
-          // Print the access token to the console
           print("Access Token: $token");
 
-          // Navigate to CollectRegistration on success
-          // showDialog(
-          //   context: context,
-          //   builder: (context) => const AlertDialog(
-          //     title: Text("Success!"),
-          //     content: Text("Log In Successful!"),
-          //   ),
-          // );
-          //
-          // Future.delayed(const Duration(seconds: 2), () {
-          //   if (!mounted) return;
-          //   Navigator.of(context).pop(); // Close dialog
-          //
-          //   WidgetsBinding.instance.addPostFrameCallback((_) {
-          //     Navigator.of(context).pushAndRemoveUntil(
-          //       MaterialPageRoute(builder: (context) => CollectRegistration(email: _email.text)),
-          //           (Route<dynamic> route) => false, // Removes all previous routes
-          //     );
-          //   });
-          // });
-          await showDialog(
-            context: context,
-            builder: (context) => const AlertDialog(
-              title: Text("Success!"),
-              content: Text("Log In Successful!"),
-            ),
-          );
-
-// Only navigates *after* dialog is dismissed
-          if (!mounted) return;
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => CollectRegistration(email: _email.text)),
-                (Route<dynamic> route) => false,
-          );
-
+          return true;
         } else {
           _showErrorDialog("Failed to retrieve token.");
         }
@@ -95,6 +61,7 @@ class _LoginPageState extends State<LoginPage> {
     } catch (error) {
       _showErrorDialog("An error occurred: $error");
     }
+    return null;
   }
 
   void _showErrorDialog(String message) {
@@ -276,7 +243,32 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           const Gap(7),
                           ElevatedButton(
-                            onPressed: _login,
+                            onPressed: () async {
+                              final response = await _login();
+                              if (response == true) {
+                                showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return const AlertDialog(
+                                        title: Text("Success!"),
+                                        content: Text("Log In Successful!"),
+                                      );
+                                    });
+                                Timer(
+                                  Duration(seconds: 2),
+                                      () {
+                                    Navigator.pop(context);
+                                    Navigator.of(context).pushAndRemoveUntil(
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              CollectRegistration(
+                                                  email: _email.text)),
+                                          (Route<dynamic> route) => false,
+                                    );
+                                  },
+                                );
+                              }
+                            },
                             style: ElevatedButton.styleFrom(
                               textStyle: const TextStyle(fontSize: 20),
                               backgroundColor: const Color(0xFF1A1448),
