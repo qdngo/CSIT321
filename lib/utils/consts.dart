@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-String baseUri = "http://34.133.75.144:8000";
+String baseUri = "http://34.132.238.165:8000";
 
 
 String pathProcessDriverLicense = '/process_driver_license/';
@@ -14,5 +14,6 @@ String pathGetPhotoCard ='/get-photo-card/';
 String pathGetDriverLicense ='/get-driver-license/';
 String loginUri = "$baseUri/login";
 String registerUri = "$baseUri/signup";
+String deleteAccountUri = "$baseUri/delete_account";
 
 Color colorPrimary = const Color(0xFF1A1448);

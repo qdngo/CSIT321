@@ -458,6 +458,59 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
     }
   }
 
+  Future<void> deleteAccount(String email) async {
+    try {
+      final response = await http.delete(
+          Uri.parse('$deleteAccountUri?email=$email'), // Replace with your actual delete account endpoint
+          headers: {'Content-Type': 'application/json'}
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final message = data['message'] ?? "Account deleted successfully.";
+
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Account Deleted"),
+            content: Text(message),
+          ),
+        );
+
+        Future.delayed(const Duration(seconds: 2), () {
+          if (!mounted) return;
+          Navigator.of(context).pop(); // Close dialog
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const MyApp()),
+                (Route<dynamic> route) => false,
+          );
+        });
+      } else {
+        _showErrorDialog(
+          "Failed to delete account. Status: ${response.statusCode}",
+        );
+      }
+    } catch (error) {
+      _showErrorDialog("An error occurred: $error");
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Error"),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   initState() {
     super.initState();
@@ -696,11 +749,32 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
                   ListTile(
                     leading: const Icon(Icons.delete),
                     title: const Text('Delete Account'),
-                    onTap: () {
-                      // TODO: Add delete logic
+                    onTap: () async {
                       _panelController.close();
+
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text("Confirm Deletion"),
+                          content: const Text("Are you sure you want to delete your account? This action cannot be undone."),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(false),
+                              child: const Text("Cancel"),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(true),
+                              child: const Text("Delete", style: TextStyle(color: Colors.red)),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (confirm == true) {
+                        await deleteAccount(widget.email); // Make sure `userEmail` is available (from login/session)
+                      }
                     },
-                  ),
+                  )
                 ],
               ),
             ),
