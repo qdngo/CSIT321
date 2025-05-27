@@ -143,39 +143,33 @@ def log_normalized_bboxes(ocr_results: list, image_size: tuple):
         
 def detect_state_from_text(ocr_results: list) -> str:
     """
-    Detects the Australian state based on OCR text results.
+    Detects the Australian state based on OCR text results (case-insensitive).
     Prioritizes matches found in the first few (top) OCR lines.
     """
     state_keywords = {
-        "NEW SOUTH WALES": "NSW",
-        "NSW": "NSW",
-        "VICTORIA": "VIC",
-        "VIC": "VIC",
-        "QUEENSLAND": "QLD",
-        "QLD": "QLD",
-        "SOUTH AUSTRALIA": "SA",
-        "SA": "SA",
-        "WESTERN AUSTRALIA": "WA",
-        "WA": "WA",
-        "TASMANIA": "TAS",
-        "TAS": "TAS",
-        "AUSTRALIAN CAPITAL TERRITORY": "ACT",
-        "ACT": "ACT",
-        "NORTHERN TERRITORY": "NT",
-        "NT": "NT"
+        "new south wales": "NSW",
+        "nsw": "NSW",
+        "victoria": "VIC",
+        "vic": "VIC",
+        "queensland": "QLD",
+        "qld": "QLD",
+        "south australia": "SA",
+        "sa": "SA",
+        "western australia": "WA",
+        "westernaustralia": "WA",
+        "wa": "WA",
+        "tasmania": "TAS",
+        "personal information card": "TAS",
+        "tasmanian": "TAS",
+        "tas": "TAS",
+        "australian capital territory": "ACT",
+        "act": "ACT",
+        "northern territory": "NT",
+        "nt": "NT"
     }
 
-    # Try first 4 lines first — most likely location
-    top_lines = ocr_results[:4]
-    for result in top_lines:
-        text = result[1][0].upper()
-        for keyword, code in state_keywords.items():
-            if keyword in text:
-                return code
-
-    # Fallback: scan all lines
     for result in ocr_results:
-        text = result[1][0].upper()
+        text = result[1][0].lower()
         for keyword, code in state_keywords.items():
             if keyword in text:
                 return code
@@ -352,10 +346,23 @@ def define_passport_regions(image_size: tuple) -> dict:
         "gender": (0.31 * width, 0.49 * height, 0.39 * width, 0.54 * height),
     }
 
-def define_photo_card_regions(image_size: tuple) -> dict:
-    """
-    Define precise bounding box regions for NSW photo cards based on the provided example image.
-    """
+# def define_photo_card_regions(image_size: tuple) -> dict:
+#     """
+#     Define precise bounding box regions for NSW photo cards based on the provided example image.
+#     """
+#     width, height = image_size
+#     return {
+#         "first_name": (0.02 * width, 0.17 * height, 0.4 * width, 0.25 * height), 
+#         "last_name": (0.02 * width, 0.17 * height, 0.4 * width, 0.25 * height), 
+#         "address": (0.02 * width, 0.36 * height, 0.4 * width, 0.55 * height), 
+#         "photo_card_number": (0.02 * width, 0.59 * height, 0.26 * width, 0.65 * height), 
+#         "card_number": (0.75 * width, 0.245 * height, 0.975 * width, 0.3 * height), 
+#         "date_of_birth": (0.46 * width, 0.91 * height, 0.66 * width, 0.97 * height), 
+#         "expiry_date": (0.77 * width, 0.91 * height, 0.97 * width, 0.97 * height), 
+#     }
+
+# ================= 1. NSW PHOTO CARD =================
+def define_nsw_photo_card_regions(image_size: tuple) -> dict:
     width, height = image_size
     return {
         "first_name": (0.02 * width, 0.17 * height, 0.4 * width, 0.25 * height), 
@@ -366,3 +373,95 @@ def define_photo_card_regions(image_size: tuple) -> dict:
         "date_of_birth": (0.46 * width, 0.91 * height, 0.66 * width, 0.97 * height), 
         "expiry_date": (0.77 * width, 0.91 * height, 0.97 * width, 0.97 * height), 
     }
+    
+# ================= 2. VIC PHOTO CARD =================
+def define_vic_photo_card_regions(image_size: tuple) -> dict:
+    width, height = image_size
+    return {
+        "first_name": (0.04 * width, 0.225 * height, 0.25 * width, 0.275 * height),
+        "last_name": (0.04 * width, 0.225 * height, 0.25 * width, 0.275 * height),
+        "address": (0.043 * width, 0.300 * height, 0.4 * width, 0.4 * height),
+        "photo_card_number": (0.8 * width, 0.3 * height, 0.943 * width, 0.355 * height),
+        "card_number": (0.8 * width, 0.3 * height, 0.943 * width, 0.355 * height),
+        "date_of_birth": (0.040 * width, 0.524 * height, 0.194 * width, 0.569 * height),
+        "expiry_date": (0 * width, 0 * height, 0 * width, 0 * height), 
+    }
+    
+# ================= 3. QLD PHOTO CARD =================
+def define_qld_photo_card_regions(image_size: tuple) -> dict:
+    width, height = image_size
+    return {
+        "first_name": (0.074 * width, 0.133 * height, 0.209 * width, 0.183 * height),
+        "last_name": (0.072 * width, 0.190 * height, 0.209 * width, 0.246 * height),
+        "address": (0 * width, 0 * height, 0 * width, 0 * height),
+        "photo_card_number": (0.744 * width, 0.103 * height, 0.969 * width, 0.157 * height),
+        "card_number": (0.744 * width, 0.103 * height, 0.969 * width, 0.157 * height),
+        "date_of_birth": (0.287 * width, 0.413 * height, 0.564 * width, 0.478 * height),
+        "expiry_date": (0.287 * width, 0.633 * height, 0.395 * width, 0.683 * height), 
+    }
+    
+# ================= 4. SA PHOTO CARD =================
+def define_sa_photo_card_regions(image_size: tuple) -> dict:
+    width, height = image_size
+    return {
+        "first_name": (0.090 * width, 0.498 * height, 0.444 * width, 0.546 * height),
+        "last_name": (0.090 * width, 0.498 * height, 0.444 * width, 0.546 * height),
+        "address": (0.089 * width, 0.577 * height, 0.321 * width, 0.7 * height),
+        "photo_card_number": (0.068 * width, 0.226 * height, 0.211 * width, 0.290 * height),
+        "card_number": (0.068 * width, 0.226 * height, 0.211 * width, 0.290 * height),
+        "date_of_birth": (0.540 * width, 0.260 * height, 0.880 * width, 0.345 * height),
+        "expiry_date": (0 * width, 0 * height, 0 * width, 0 * height), 
+    }
+    
+# ================= 5. WA PHOTO CARD =================
+def define_wa_photo_card_regions(image_size: tuple) -> dict:
+    width, height = image_size
+    return {
+        "first_name": (0.079 * width, 0.454 * height, 0.264 * width, 0.496 * height),
+        "last_name": (0.029 * width, 0.405 * height, 0.146 * width, 0.452 * height),
+        "address": (0.035 * width, 0.506 * height, 0.381 * width, 0.6 * height),
+        "photo_card_number": (0.816 * width, 0.302 * height, 0.966 * width, 0.349 * height),
+        "card_number": (0.816 * width, 0.302 * height, 0.966 * width, 0.349 * height),
+        "date_of_birth": (0.338 * width, 0.681 * height, 0.546 * width, 0.732 * height),
+        "expiry_date": (0.033 * width, 0.681 * height, 0.244 * width, 0.732 * height), 
+    }
+    
+# ================= 6. ACT PHOTO CARD =================
+def define_act_photo_card_regions(image_size: tuple) -> dict:
+    width, height = image_size
+    return {
+        "first_name": (0.030 * width, 0.246 * height, 0.290 * width, 0.288 * height),
+        "last_name": (0.030 * width, 0.246 * height, 0.290 * width, 0.288 * height),
+        "address": (0.026 * width, 0.321 * height, 0.509 * width, 0.48 * height),
+        "photo_card_number": (0.024 * width, 0.605 * height, 0.371 * width, 0.661 * height),
+        "card_number": (0.024 * width, 0.605 * height, 0.371 * width, 0.661 * height),
+        "date_of_birth": (0.014 * width, 0.532 * height, 0.352 * width, 0.575 * height),
+        "expiry_date": (0 * width, 0 * height, 0 * width, 0 * height), 
+    }
+    
+# ================= 7. TAS PHOTO CARD =================
+def define_tas_photo_card_regions(image_size: tuple) -> dict:
+    width, height = image_size
+    return {
+        "first_name": (0.35 * width, 0.205 * height, 0.43 * width, 0.27 * height),
+        "last_name": (0.35 * width, 0.15 * height, 0.48 * width, 0.2 * height),
+        "address": (0.365 * width, 0.58 * height, 0.745 * width, 0.7 * height),
+        "photo_card_number": (0.367 * width, 0.462 * height, 0.502 * width, 0.524 * height),
+        "card_number": (0.367 * width, 0.462 * height, 0.502 * width, 0.524 * height),
+        "date_of_birth": (0.095 * width, 0.74 * height, 0.25 * width, 0.81 * height),
+        "expiry_date": (0 * width, 0 * height, 0 * width, 0 * height), 
+    }
+    
+# ================= 8. NT PHOTO CARD =================
+def define_nt_photo_card_regions(image_size: tuple) -> dict:
+    width, height = image_size
+    return {
+        "first_name": (0.316 * width, 0.369 * height, 0.416 * width, 0.417 * height),
+        "last_name": (0.318 * width, 0.319 * height, 0.450 * width, 0.361 * height),
+        "address": (0 * width, 0 * height, 0 * width, 0 * height),
+        "photo_card_number": (0.026 * width, 0.915 * height, 0.171 * width, 0.952 * height),
+        "card_number": (0.026 * width, 0.915 * height, 0.171 * width, 0.952 * height),
+        "date_of_birth": (0.360 * width, 0.486 * height, 0.723 * width, 0.562 * height),
+        "expiry_date": (0.319 * width, 0.694 * height, 0.568 * width, 0.732 * height), 
+    }
+    

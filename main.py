@@ -97,6 +97,7 @@ async def process_document(file: UploadFile, region_func, doc_type: str) -> dict
         ocr_results = perform_ocr(preprocessed_image, debug=True)
         regions = region_func(image_size)
         state_code1 = detect_state_from_text(ocr_results)
+        #state_code1 = "NT" 
 
         if doc_type == "driver_license":
             if state_code1 == "NSW":
@@ -117,13 +118,33 @@ async def process_document(file: UploadFile, region_func, doc_type: str) -> dict
                 regions = define_nt_license_regions(image_size)
             else:
                 raise HTTPException(status_code=400, detail="Unable to detect state from license.")
+            
+        elif doc_type == "photo_card":
+            if state_code1 == "NSW":
+                regions = define_nsw_photo_card_regions(image_size)
+            elif state_code1 == "VIC":
+                regions = define_vic_photo_card_regions(image_size)
+            elif state_code1 == "QLD":
+                regions = define_qld_photo_card_regions(image_size)
+            elif state_code1 == "SA":
+                regions = define_sa_photo_card_regions(image_size)
+            elif state_code1 == "WA":
+                regions = define_wa_photo_card_regions(image_size)
+            elif state_code1 == "TAS":
+                regions = define_tas_photo_card_regions(image_size)
+            elif state_code1 == "ACT":
+                regions = define_act_photo_card_regions(image_size)
+            elif state_code1 == "NT":
+                regions = define_nt_photo_card_regions(image_size)
+            else:
+                raise HTTPException(status_code=400, detail="Unable to detect state from photo card.")
+
         else:
             regions = region_func(image_size)
         
         
         #draw_ocr_boxes(preprocessed_image, ocr_results)
         #log_normalized_bboxes(ocr_results, image_size)
-        
         
         extracted_data = map_ocr_to_fields(ocr_results, regions, doc_type=doc_type, state_code=state_code1)
         
@@ -139,6 +160,13 @@ async def process_document(file: UploadFile, region_func, doc_type: str) -> dict
 
 
 def define_license_regions(image_size: tuple) -> dict:
+    """
+    Dummy function placeholder — actual region is selected in `process_document()`
+    based on the detected state.
+    """
+    return {}
+
+def define_photo_card_regions(image_size: tuple) -> dict:
     """
     Dummy function placeholder — actual region is selected in `process_document()`
     based on the detected state.
