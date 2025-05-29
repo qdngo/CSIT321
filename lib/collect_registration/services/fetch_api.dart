@@ -7,7 +7,7 @@ import 'package:sample_assist/model/passport.dart';
 
 class FetchApi {
   FetchApi._();
-  static const String baseUrl = '34.133.75.144:8000';
+  static const String baseUrl = '34.132.238.165:8000';
   static const String getPhotoCard = '/get-photo-card';
   static const String getPassport = '/get-passport';
   static const String getDriverLicense = '/get-driver-license';

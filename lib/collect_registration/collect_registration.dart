@@ -39,11 +39,10 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
   String? selectedPhotoIDType;
   final ImagePicker _imagePicker = ImagePicker();
   File? _uploadedPhoto;
-  bool isLoading = true;
+  bool isLoading = false;
   bool _isPanelOpen = false; // Track whether the panel is open or closed
 
   final idController = TextEditingController();
-  final nationalController = TextEditingController();
   final expiryController = TextEditingController();
   final cardNumberController = TextEditingController();
   final firstNameController = TextEditingController();
@@ -51,8 +50,6 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
   final addressController = TextEditingController();
   final sexController = TextEditingController();
   final dobController = TextEditingController();
-  final mobileNumberController = TextEditingController();
-  final phoneNumberController = TextEditingController();
 
   final PanelController _panelController =
       PanelController(); // Controller for the sliding panel
@@ -298,7 +295,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
       if (response.statusCode == 200) {
         var responseBody = await response.stream.bytesToString();
         final data = jsonDecode(responseBody)['extracted_data'] ?? '';
-        logger.e('dongds data: $responseBody');
+        logger.e('close data: $responseBody');
         firstNameController.text =
             data['first_name'] ?? firstNameController.text;
         lastNameController.text = data['last_name'] ?? lastNameController.text;
@@ -428,7 +425,6 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
         _uploadedPhoto = null;
         selectedPhotoIDType = null;
         idController.clear();
-        nationalController.clear();
         expiryController.clear();
         cardNumberController.clear();
         firstNameController.clear();
@@ -436,8 +432,6 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
         addressController.clear();
         sexController.clear();
         dobController.clear();
-        mobileNumberController.clear();
-        phoneNumberController.clear();
       });
 
       // Show success dialog
@@ -521,7 +515,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
   initState() {
     super.initState();
     // Call the API to get the photo card
-    initData();
+    // initData();
   }
 
   Future<void> initData() async {
@@ -658,10 +652,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
                                 label: 'Photo ID Document Number',
                                 controller: idController,
                               ),
-                              CustomTextField(
-                                label: 'Nationality',
-                                controller: nationalController,
-                              ),
+                              const SizedBox(height: 16),
                               CustomTextField(
                                 label: 'Expiry Date',
                                 controller: expiryController,
@@ -690,16 +681,6 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
                               CustomTextField(
                                 label: 'Date of Birth',
                                 controller: dobController,
-                              ),
-                              const SizedBox(height: 16),
-                              const SectionHeader(title: 'CONTACT INFORMATION'),
-                              CustomTextField(
-                                label: 'Mobile Number',
-                                controller: mobileNumberController,
-                              ),
-                              CustomTextField(
-                                label: 'Phone Number (Optional)',
-                                controller: phoneNumberController,
                               ),
                               const SizedBox(height: 16),
                               if (selectedPhotoIDType == "Driver's License" ||
