@@ -39,7 +39,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
   String? selectedPhotoIDType;
   final ImagePicker _imagePicker = ImagePicker();
   File? _uploadedPhoto;
-  bool isLoading = false;
+  bool isLoading = true;
   bool _isPanelOpen = false; // Track whether the panel is open or closed
 
   final idController = TextEditingController();
@@ -515,7 +515,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
   initState() {
     super.initState();
     // Call the API to get the photo card
-    // initData();
+    initData();
   }
 
   Future<void> initData() async {
