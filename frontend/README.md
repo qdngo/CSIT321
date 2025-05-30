@@ -12,8 +12,8 @@ It interacts with a backend server using REST APIs.
 
 Make sure you have the following installed:
 
-- [Flutter SDK](https://docs.flutter.dev/get-started/install) (version ^3.5.1)
-- Dart SDK (included with Flutter)
+- [Flutter SDK](https://docs.flutter.dev/get-started/install) (version 3.24.1)
+- Dart SDK (included with Flutter) (version 3.5.1)
 - Android Studio or VS Code
 - A connected Android/iOS device or emulator
 
