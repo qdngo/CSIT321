@@ -22,24 +22,24 @@ Make sure you have the following installed:
 ## 🛠️ Installation & Setup
 
 1. **Clone the repository**
-
 ```bash
 git clone https://github.com/qdngo/CSIT321.git
 cd CSIT321/frontend
 ```
-2. **Install dependencies**
+2. **Clean the space (optional)**
+ ```bash
+flutter clean
+```
+3. **Install dependencies**
 ```bash
 flutter pub get
 ```
-3. **Set up environment variables**
-Create a .env file inside the /frontend directory:
-```bash
-BASE_URI=http://your-backend-ip:8000
-```
 4. **Run the app**
+ 
 ```bash
 flutter run
 ```
+
 ## Folder Structure
 - lib/ – Flutter app logic, screens, widgets
 - assets/ – Images and static resources
