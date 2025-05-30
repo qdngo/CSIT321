@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:http/http.dart' as http;
-import 'package:sample_assist/utils/consts.dart';
+import 'package:sample_assist/core/utils/consts.dart';
 
-import '../gen/assets.gen.dart';
+import '../../../gen/assets.gen.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});

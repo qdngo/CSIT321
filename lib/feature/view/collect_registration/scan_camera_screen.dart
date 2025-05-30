@@ -3,10 +3,10 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:sample_assist/extension/string_ext.dart';
-import '../model/scan_model.dart';
+import 'package:sample_assist/core/extension/string_ext.dart';
+import '../../../model/scan_model.dart';
 import 'package:sample_assist/main.dart';
-import 'package:sample_assist/utils/consts.dart';
+import 'package:sample_assist/core/utils/consts.dart';
 import 'package:collection/collection.dart';
 
 

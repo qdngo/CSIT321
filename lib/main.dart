@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
-import 'package:sample_assist/login/login_page.dart';
-import 'package:sample_assist/collect_registration/widgets/theme_provider.dart'; // <- Add your ThemeProvider file
+import 'package:sample_assist/feature/view/login/login_page.dart';
+import 'package:sample_assist/feature/controller/theme_provider.dart'; // <- Add your ThemeProvider file
 
 var logger = Logger(
   printer: PrettyPrinter(),

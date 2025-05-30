@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
-import 'package:sample_assist/collect_registration/collect_registration.dart';
-import 'package:sample_assist/utils/consts.dart';
-import '../gen/assets.gen.dart';
+import 'package:sample_assist/feature/view/collect_registration/collect_registration.dart';
+import 'package:sample_assist/core/utils/consts.dart';
+import '../../../gen/assets.gen.dart';
 import '../register/register_page.dart';
 
 class LoginPage extends StatefulWidget {
