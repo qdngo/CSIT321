@@ -247,32 +247,35 @@ class _LoginPageState extends State<LoginPage> {
                           ElevatedButton(
                             onPressed: () async {
                               final response = await _login();
+
+                              // Only use context *immediately* after await and *within* the widget's lifecycle
+                              if (!context.mounted) return;
+
                               if (response == true) {
-                                if (!mounted) return; // ✅ Edited
+                                if (!context.mounted) return;
                                 showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      return const AlertDialog(
-                                        title: Text("Success!"),
-                                        content: Text("Log In Successful!"),
-                                      );
-                                    });
-                                Timer(
-                                  const Duration(seconds: 2),
-                                      () {
-                                    if (!mounted) return; // ✅ Edited
-                                    Navigator.pop(context);
-                                    Navigator.of(context).pushAndRemoveUntil(
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              CollectRegistration(
-                                                  email: _email.text)),
-                                          (Route<dynamic> route) => false,
+                                  context: context,
+                                  builder: (context) {
+                                    return const AlertDialog(
+                                      title: Text("Success!"),
+                                      content: Text("Log In Successful!"),
                                     );
                                   },
                                 );
+
+                                Future.delayed(const Duration(seconds: 2), () {
+                                  if (!context.mounted) return;
+                                  Navigator.pop(context); // Close the dialog
+                                  Navigator.of(context).pushAndRemoveUntil(
+                                    MaterialPageRoute(
+                                      builder: (context) => CollectRegistration(email: _email.text),
+                                    ),
+                                        (Route<dynamic> route) => false,
+                                  );
+                                });
                               }
                             },
+
                             style: ElevatedButton.styleFrom(
                               textStyle: const TextStyle(fontSize: 20),
                               backgroundColor: const Color(0xFF1A1448),

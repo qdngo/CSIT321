@@ -211,7 +211,6 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
       final DateFormat outputFormat = DateFormat('dd MMM yyyy', 'en_US');
       return outputFormat.format(parsedDate);
     } catch (e) {
-      throw Exception('Error with this format: $e');
       return inputDate; // return to the initial
     }
   }
