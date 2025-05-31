@@ -195,13 +195,25 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
   }
 
   String reformatDate(String inputDate) {
-    // Parse với định dạng đầu vào "dd MMM yyyy"
-    final DateFormat inputFormat = DateFormat('dd MMM yyyy', 'en_US');
-    final DateTime parsedDate = inputFormat.parse(inputDate);
+    DateTime parsedDate;
 
-    // Format lại nếu cần (trong trường hợp bạn muốn đổi định dạng)
-    final DateFormat outputFormat = DateFormat('dd MMM yyyy', 'en_US');
-    return outputFormat.format(parsedDate);
+    try {
+      // Nếu chuỗi giống định dạng ISO: yyyy-MM-dd
+      if (RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(inputDate)) {
+        parsedDate = DateTime.parse(inputDate);
+      } else {
+        // Nếu chuỗi có định dạng dd MMM yyyy (ví dụ: 23 Mar 2029)
+        final DateFormat inputFormat = DateFormat('dd MMM yyyy', 'en_US');
+        parsedDate = inputFormat.parse(inputDate);
+      }
+
+      // Format lại sang dd MMM yyyy
+      final DateFormat outputFormat = DateFormat('dd MMM yyyy', 'en_US');
+      return outputFormat.format(parsedDate);
+    } catch (e) {
+      print("Lỗi khi định dạng ngày: $e");
+      return inputDate; // hoặc trả về chuỗi mặc định
+    }
   }
 
   Map<String, dynamic> getBody() {
