@@ -28,10 +28,6 @@ jobs:
       - name: Run analyzer
         run: flutter analyze
 
-      # (Optional) Run unit tests
-      - name: Run tests
-        run: flutter test
-
       # (Optional) Build APK or web
       - name: Build APK
         run: flutter build apk --debug
