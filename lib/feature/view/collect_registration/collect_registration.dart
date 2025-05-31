@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:collection/collection.dart';
@@ -193,7 +194,22 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
     return '';
   }
 
+  String reformatDate(String inputDate) {
+    // Parse với định dạng đầu vào "dd MMM yyyy"
+    final DateFormat inputFormat = DateFormat('dd MMM yyyy', 'en_US');
+    final DateTime parsedDate = inputFormat.parse(inputDate);
+
+    // Format lại nếu cần (trong trường hợp bạn muốn đổi định dạng)
+    final DateFormat outputFormat = DateFormat('dd MMM yyyy', 'en_US');
+    return outputFormat.format(parsedDate);
+  }
+
   Map<String, dynamic> getBody() {
+    final expiryDate = reformatDate(expiryController.text);
+    final dateOfBirth = reformatDate(dobController.text);
+    print(cardNumberController.text);
+    print(idController.text);
+
     if (selectedPhotoIDType == "Driver's License") {
       return {
         "email": widget.email,
@@ -202,17 +218,17 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
         "address": addressController.text,
         "license_number": idController.text,
         "card_number": cardNumberController.text,
-        "date_of_birth": dobController.text,
-        "expiry_date": expiryController.text,
+        "date_of_birth": dateOfBirth,
+        "expiry_date": expiryDate,
       };
     } else if (selectedPhotoIDType == "Passport") {
       return {
         "email": widget.email,
         "first_name": firstNameController.text,
         "last_name": lastNameController.text,
-        "date_of_birth": dobController.text,
+        "date_of_birth": dateOfBirth,
         "document_number": idController.text,
-        "expiry_date": expiryController.text,
+        "expiry_date": expiryDate,
         "gender": sexController.text,
       };
     } else if (selectedPhotoIDType == "National ID") {
@@ -222,10 +238,10 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
         "last_name": lastNameController.text,
         "address": addressController.text,
         "photo_card_number": idController.text,
-        "date_of_birth": dobController.text,
+        "date_of_birth": dateOfBirth,
         "card_number": cardNumberController.text,
         "gender": sexController.text,
-        "expiry_date": expiryController.text,
+        "expiry_date": expiryDate,
       };
     }
     return <String, dynamic>{};
@@ -515,6 +531,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
   initState() {
     super.initState();
     // Call the API to get the photo card
+
     initData();
   }
 
@@ -534,47 +551,45 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
 
         // fill dữ liệu vào các trường
         if (responsePhotoCar.isNotEmpty) {
-          idController.text = responsePhotoCar.first.cardNumber.toString();
+          idController.text = responsePhotoCar.last.cardNumber.toString();
 
-          expiryController.text =
-              responsePhotoCar.first.expiryDate.toString().split(' ')[0];
+          expiryController.text = reformatDate(
+              responsePhotoCar.last.expiryDate.toString().split(' ')[0]);
           cardNumberController.text =
-              responsePhotoCar.first.photoCardNumber.toString();
-          firstNameController.text =
-              responsePhotoCar.first.firstName.toString();
-          lastNameController.text = responsePhotoCar.first.lastName.toString();
-          addressController.text = responsePhotoCar.first.address.toString();
-          sexController.text = responsePhotoCar.first.toString();
-          dobController.text =
-              responsePhotoCar.first.dateOfBirth.toString().split(' ')[0];
+              responsePhotoCar.last.photoCardNumber.toString();
+          firstNameController.text = responsePhotoCar.last.firstName.toString();
+          lastNameController.text = responsePhotoCar.last.lastName.toString();
+          addressController.text = responsePhotoCar.last.address.toString();
+          sexController.text = responsePhotoCar.last.toString();
+          dobController.text = reformatDate(
+              responsePhotoCar.last.dateOfBirth.toString().split(' ')[0]);
           selectedPhotoIDType = 'National ID';
         } else if (responsePassport.isNotEmpty) {
-          idController.text = responsePassport.first.documentNumber.toString();
-          expiryController.text =
-              responsePassport.first.expiryDate.toString().split(' ')[0];
+          idController.text = responsePassport.last.documentNumber.toString();
+          expiryController.text = reformatDate(
+              responsePassport.last.expiryDate.toString().split(' ')[0]);
           cardNumberController.text =
-              responsePassport.first.documentNumber.toString();
-          firstNameController.text =
-              responsePassport.first.firstName.toString();
-          lastNameController.text = responsePassport.first.lastName.toString();
-          sexController.text = responsePassport.first.gender.toString();
-          dobController.text =
-              responsePassport.first.dateOfBirth.toString().split(' ')[0];
+              responsePassport.last.documentNumber.toString();
+          firstNameController.text = responsePassport.last.firstName.toString();
+          lastNameController.text = responsePassport.last.lastName.toString();
+          sexController.text = responsePassport.last.gender.toString();
+          dobController.text = reformatDate(
+              responsePassport.last.dateOfBirth.toString().split(' ')[0]);
           selectedPhotoIDType = 'Passport';
         } else if (responseDriverLicense.isNotEmpty) {
-          idController.text = responseDriverLicense.first.cardNumber.toString();
-          expiryController.text =
-              responseDriverLicense.first.expiryDate.toString().split(' ')[0];
+          idController.text = responseDriverLicense.last.cardNumber.toString();
+          expiryController.text = reformatDate(
+              responseDriverLicense.last.expiryDate.toString().split(' ')[0]);
           cardNumberController.text =
-              responseDriverLicense.first.cardNumber.toString();
+              responseDriverLicense.last.cardNumber.toString();
           firstNameController.text =
-              responseDriverLicense.first.firstName.toString();
+              responseDriverLicense.last.firstName.toString();
           lastNameController.text =
-              responseDriverLicense.first.lastName.toString();
+              responseDriverLicense.last.lastName.toString();
           addressController.text =
-              responseDriverLicense.first.address.toString();
-          dobController.text =
-              responseDriverLicense.first.dateOfBirth.toString().split(' ')[0];
+              responseDriverLicense.last.address.toString();
+          dobController.text = reformatDate(
+              responseDriverLicense.last.dateOfBirth.toString().split(' ')[0]);
           selectedPhotoIDType = 'Driver\'s License';
         }
       });
@@ -696,7 +711,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
                               ActionButtons(
                                 formKey: _formKey,
                                 path: getPathStorage(),
-                                body: getBody(),
+                                getBody: getBody,
                               ),
                             ],
                           ),

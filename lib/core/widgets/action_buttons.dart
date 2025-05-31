@@ -7,11 +7,11 @@ import 'package:sample_assist/core/utils/consts.dart';
 
 class ActionButtons extends StatelessWidget {
   final GlobalKey<FormState> formKey;
-  final Map<String, dynamic> body;
+  final Map<String, dynamic> Function() getBody;
   final String path;
   const ActionButtons({
     required this.formKey,
-    required this.body,
+    required this.getBody,
     required this.path,
     super.key,
   });
@@ -25,7 +25,7 @@ class ActionButtons extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF01B4D2),
             shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           ),
           onPressed: () {},
@@ -39,12 +39,12 @@ class ActionButtons extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF1A1448),
             shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           ),
           onPressed: () {
             if (formKey.currentState!.validate()) {
-              storeDriverLicense(path, body);
+              storeDriverLicense(context, path, getBody());
             }
           },
           child: const Text(
@@ -61,7 +61,7 @@ class ActionButtons extends StatelessWidget {
   }
 
   Future<void> storeDriverLicense(
-      String path, Map<String, dynamic> body) async {
+      BuildContext context, String path, Map<String, dynamic> body) async {
     String url = '$baseUri$path';
     const Map<String, String> headers = {
       'accept': 'application/json',
@@ -78,10 +78,20 @@ class ActionButtons extends StatelessWidget {
       if (response.statusCode >= 200 && response.statusCode < 300) {
         if (kDebugMode) {
           print("Success: ${response.body}");
+          final Map<String, dynamic> responseData = jsonDecode(response.body);
+          final String message = responseData['message'] ?? 'Notification';
+          _showDialog(context, message, 'Success');
         }
       } else {
         if (kDebugMode) {
-          print("Error: ${response.statusCode} - ${response.body}");
+          final Map<String, dynamic> responseData = jsonDecode(response.body);
+          final String message =
+              responseData['detail'] ?? 'An error occurred please try again';
+          _showDialog(
+            context,
+            message,
+            'Failure',
+          );
         }
       }
     } catch (e) {
@@ -89,5 +99,17 @@ class ActionButtons extends StatelessWidget {
         print("Request failed: $e");
       }
     }
+  }
+
+  Future<void> _showDialog(BuildContext context, String content, String title) {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(content),
+        );
+      },
+    );
   }
 }
