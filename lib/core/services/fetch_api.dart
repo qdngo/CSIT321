@@ -26,7 +26,7 @@ class FetchApi {
         throw Exception('Failed to load photo card');
       }
     } catch (e) {
-      print('Error: $e');
+      throw Exception('Error fetching photo card: $e');
     }
     return photoCard;
   }
@@ -45,7 +45,7 @@ class FetchApi {
         throw Exception('Failed to load photo card');
       }
     } catch (e) {
-      print('Error: $e');
+      throw Exception('Error fetching photo card: $e');
     }
     return passport;
   }
@@ -65,7 +65,7 @@ class FetchApi {
         throw Exception('Failed to load photo card');
       }
     } catch (e) {
-      print('Error: $e');
+      throw Exception('Error fetching driver license: $e');
     }
     return driverLicenses;
   }

@@ -29,7 +29,10 @@ class _CameraWithScanState extends State<CameraWithScan> {
       // Chụp ảnh
       await widget.initializeControllerFuture;
       final file = await widget.controller.takePicture();
-      Navigator.pop(context, file);
+
+      if (!mounted) return; // ✅ Check if widget is still mounted before using context
+
+      Navigator.pop(context, file); // ✅ Safe to use context now
     } catch (e) {
       if (kDebugMode) {
         print('Error capturing image: $e');

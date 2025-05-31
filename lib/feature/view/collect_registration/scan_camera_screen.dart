@@ -77,8 +77,7 @@ class _ScanCameraScreenState extends State<ScanCameraScreen> {
   Future<void> _scanText(File imageFile) async {
     final inputImage = InputImage.fromFile(imageFile);
     final textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
-    final RecognizedText recognizedText =
-    await textRecognizer.processImage(inputImage);
+    final RecognizedText recognizedText = await textRecognizer.processImage(inputImage);
 
     final rawText = recognizedText.text.toUpperCase();
 
@@ -87,14 +86,18 @@ class _ScanCameraScreenState extends State<ScanCameraScreen> {
         rawText.contains('NATIONAL')) &&
         rawText.contains('LICENCE NO') &&
         rawText.contains('DATE OF BIRTH')) {
+
       final ScanModel model = ScanModel();
       final textSplit = rawText.split(RegExp(r'\r?\n'));
 
       model.filePath = imageFile.path;
       detachDataLocal(model, textSplit);
+
+      if (!mounted) return; // ✅ Check before using context
       Navigator.pop(context, model);
     }
   }
+
 
   Future<void> detachDataLocal(ScanModel model, List<String> textSplit) async {
     final iLicenceNo = textSplit.indexOf('LICENCE NO') + 1;

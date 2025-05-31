@@ -9,7 +9,6 @@ class OpenCVService {
       final String result = await _channel.invokeMethod('processImage', {'filePath': filePath});
       return result;
     } catch (e) {
-      print("Error during OpenCV processing: $e");
       throw Exception("Failed to process image with OpenCV");
     }
   }

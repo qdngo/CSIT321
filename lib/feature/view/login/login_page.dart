@@ -46,19 +46,21 @@ class _LoginPageState extends State<LoginPage> {
         final String? token = data['access_token'];
 
         if (token != null) {
-          print("Access Token: $token");
-
           return true;
         } else {
+          if (!mounted) return null; // ✅ Edited
           _showErrorDialog("Failed to retrieve token.");
         }
       } else if (response.statusCode == 401) {
+        if (!mounted) return null; // ✅ Edited
         _showErrorDialog("Invalid email or password.");
       } else {
+        if (!mounted) return null; // ✅ Edited
         _showErrorDialog(
             "Unexpected error occurred. Status: ${response.statusCode}");
       }
     } catch (error) {
+      if (!mounted) return null; // ✅ Edited
       _showErrorDialog("An error occurred: $error");
     }
     return null;
@@ -246,6 +248,7 @@ class _LoginPageState extends State<LoginPage> {
                             onPressed: () async {
                               final response = await _login();
                               if (response == true) {
+                                if (!mounted) return; // ✅ Edited
                                 showDialog(
                                     context: context,
                                     builder: (context) {
@@ -255,8 +258,9 @@ class _LoginPageState extends State<LoginPage> {
                                       );
                                     });
                                 Timer(
-                                  Duration(seconds: 2),
+                                  const Duration(seconds: 2),
                                       () {
+                                    if (!mounted) return; // ✅ Edited
                                     Navigator.pop(context);
                                     Navigator.of(context).pushAndRemoveUntil(
                                       MaterialPageRoute(

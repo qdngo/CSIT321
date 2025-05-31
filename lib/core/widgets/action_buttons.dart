@@ -9,6 +9,7 @@ class ActionButtons extends StatelessWidget {
   final GlobalKey<FormState> formKey;
   final Map<String, dynamic> Function() getBody;
   final String path;
+
   const ActionButtons({
     required this.formKey,
     required this.getBody,
@@ -24,27 +25,35 @@ class ActionButtons extends StatelessWidget {
         ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF01B4D2),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           ),
           onPressed: () {},
           child: const Text(
             'Save and Close',
-            style: TextStyle(
-                color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF1A1448),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           ),
-          onPressed: () {
+          onPressed: () async {
             if (formKey.currentState!.validate()) {
-              storeDriverLicense(context, path, getBody());
+              final body = getBody(); // ✅ Capture body before await
+              final currentContext = context; // ✅ Save context before await
+
+              final result = await storeDriverLicense(path, body); // ✅ Remove context from here
+
+              if (!currentContext.mounted) return; // ✅ Check if context is still valid
+
+              if (result['status'] == 'Success') {
+                _showDialog(currentContext, result['message']!, 'Success'); // ✅ Use saved context
+              } else {
+                _showDialog(currentContext, result['message']!, 'Failure'); // ✅ Use saved context
+              }
             }
           },
           child: const Text(
@@ -60,10 +69,10 @@ class ActionButtons extends StatelessWidget {
     );
   }
 
-  Future<void> storeDriverLicense(
-      BuildContext context, String path, Map<String, dynamic> body) async {
+  Future<Map<String, String>> storeDriverLicense(
+      String path, Map<String, dynamic> body) async { // ✅ Removed context from here
     String url = '$baseUri$path';
-    const Map<String, String> headers = {
+    const headers = {
       'accept': 'application/json',
       'Content-Type': 'application/json',
     };
@@ -75,29 +84,26 @@ class ActionButtons extends StatelessWidget {
         body: jsonEncode(body),
       );
 
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        if (kDebugMode) {
-          print("Success: ${response.body}");
-          final Map<String, dynamic> responseData = jsonDecode(response.body);
-          final String message = responseData['message'] ?? 'Notification';
-          _showDialog(context, message, 'Success');
-        }
+        if (kDebugMode) debugPrint("Success: ${response.body}");
+        return {
+          'status': 'Success',
+          'message': responseData['message'] ?? 'Operation successful.',
+        };
       } else {
-        if (kDebugMode) {
-          final Map<String, dynamic> responseData = jsonDecode(response.body);
-          final String message =
-              responseData['detail'] ?? 'An error occurred please try again';
-          _showDialog(
-            context,
-            message,
-            'Failure',
-          );
-        }
+        return {
+          'status': 'Failure',
+          'message': responseData['detail'] ?? 'An error occurred. Please try again.',
+        };
       }
     } catch (e) {
-      if (kDebugMode) {
-        print("Request failed: $e");
-      }
+      if (kDebugMode) debugPrint("Request failed: $e");
+      return {
+        'status': 'Failure',
+        'message': 'Request failed. Please check your network.',
+      };
     }
   }
 

@@ -211,7 +211,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
       final DateFormat outputFormat = DateFormat('dd MMM yyyy', 'en_US');
       return outputFormat.format(parsedDate);
     } catch (e) {
-      print("Lỗi khi định dạng ngày: $e");
+      throw Exception('Error with this format: $e');
       return inputDate; // return to the initial
     }
   }
@@ -219,8 +219,6 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
   Map<String, dynamic> getBody() {
     final expiryDate = reformatDate(expiryController.text);
     final dateOfBirth = reformatDate(dobController.text);
-    print(cardNumberController.text);
-    print(idController.text);
 
     if (selectedPhotoIDType == "Driver's License") {
       return {
@@ -462,6 +460,8 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
         dobController.clear();
       });
 
+      if (!mounted) return; // ✅ Check before using context
+
       // Show success dialog
       await showDialog(
         context: context,
@@ -477,8 +477,9 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
         ),
       );
 
+      if (!mounted) return; // ✅ Check again before navigation
+
       // Navigate to login screen
-      if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const MyApp()),
             (route) => false,
@@ -486,18 +487,22 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
     }
   }
 
+
   Future<void> deleteAccount(String email) async {
     try {
-      final response =
-      await http.delete(Uri.parse('$deleteAccountUri?email=$email'),
-          // Replace with your actual delete account endpoint
-          headers: {'Content-Type': 'application/json'});
+      final response = await http.delete(
+        Uri.parse('$deleteAccountUri?email=$email'),
+        headers: {'Content-Type': 'application/json'},
+      );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final message = data['message'] ?? "Account deleted successfully.";
 
-        showDialog(
+        if (!mounted) return; // ✅ Check before using context
+
+        // Show success dialog
+        await showDialog(
           context: context,
           builder: (context) => AlertDialog(
             title: const Text("Account Deleted"),
@@ -505,23 +510,30 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
           ),
         );
 
-        Future.delayed(const Duration(seconds: 2), () {
-          if (!mounted) return;
-          Navigator.of(context).pop(); // Close dialog
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => const MyApp()),
-                (Route<dynamic> route) => false,
-          );
-        });
+        if (!mounted) return; // ✅ Check again before navigation
+
+        // Wait for 2 seconds then navigate
+        await Future.delayed(const Duration(seconds: 2));
+
+        if (!mounted) return; // ✅ One more check before context usage
+
+        Navigator.of(context).pop(); // Close dialog
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const MyApp()),
+              (Route<dynamic> route) => false,
+        );
       } else {
+        if (!mounted) return; // ✅ Check before context usage in helper
         _showErrorDialog(
           "Failed to delete account. Status: ${response.statusCode}",
         );
       }
     } catch (error) {
+      if (!mounted) return; // ✅ Check before context usage in helper
       _showErrorDialog("An error occurred: $error");
     }
   }
+
 
   void _showErrorDialog(String message) {
     showDialog(

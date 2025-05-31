@@ -48,6 +48,7 @@ dependencies:
   sliding_up_panel: ^2.0.0+1
   flutter_dotenv: ^5.1.0
   intl: ^0.20.2
+  collection: ^1.17.2
 
 dev_dependencies:
   flutter_test:

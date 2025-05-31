@@ -51,6 +51,8 @@ class _RegisterPageState extends State<RegisterPage> {
         body: jsonEncode({'email': email, 'password': password}),
       );
 
+      if (!mounted) return; // ✅ check if widget still mounted before using context
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         showDialog(
@@ -60,8 +62,12 @@ class _RegisterPageState extends State<RegisterPage> {
             content: Text(data['message'] ?? 'Sign Up Successful!'),
           ),
         );
+
+        // Delay and pop dialogs/navigation with mounted checks
         Future.delayed(const Duration(seconds: 1), () {
+          if (!mounted) return; // ✅
           Navigator.of(context).pop(); // Close success dialog
+          if (!mounted) return; // ✅
           Navigator.of(context).pop(); // Return to the previous screen
         });
       } else {
@@ -75,6 +81,7 @@ class _RegisterPageState extends State<RegisterPage> {
         );
       }
     } catch (e) {
+      if (!mounted) return; // ✅
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -84,6 +91,7 @@ class _RegisterPageState extends State<RegisterPage> {
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
