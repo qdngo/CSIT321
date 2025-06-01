@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:collection/collection.dart';
@@ -52,7 +53,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
   final dobController = TextEditingController();
 
   final PanelController _panelController =
-      PanelController(); // Controller for the sliding panel
+  PanelController(); // Controller for the sliding panel
 
   // Method to toggle the panel's state
   void _togglePanel() {
@@ -70,7 +71,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
   Future<void> _getPhotoFromGallery() async {
     try {
       final XFile? pickedFile =
-          await _imagePicker.pickImage(source: ImageSource.gallery);
+      await _imagePicker.pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
         _uploadedPhoto = File(pickedFile.path);
         if (_uploadedPhoto != null) {
@@ -94,7 +95,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
 
   Future<XFile?> pickAndCropImage() async {
     final XFile? pickedFile =
-        await _imagePicker.pickImage(source: ImageSource.camera);
+    await _imagePicker.pickImage(source: ImageSource.camera);
 
     if (pickedFile != null) {
       CroppedFile? croppedFile = await ImageCropper().cropImage(
@@ -193,7 +194,34 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
     return '';
   }
 
+  String reformatDate(String inputDate) {
+    DateTime parsedDate;
+
+    try {
+      // Nếu chuỗi giống định dạng ISO: yyyy-MM-dd
+      if (RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(inputDate)) {
+        parsedDate = DateTime.parse(inputDate);
+      } else {
+        // Nếu chuỗi có định dạng dd MMM yyyy (ví dụ: 23 Mar 2029)
+        final DateFormat inputFormat = DateFormat('dd MMM yyyy', 'en_US');
+        parsedDate = inputFormat.parse(inputDate);
+      }
+
+      // Format lại sang dd MMM yyyy
+      final DateFormat outputFormat = DateFormat('dd MMM yyyy', 'en_US');
+      return outputFormat.format(parsedDate);
+    } catch (e) {
+      print("Lỗi khi định dạng ngày: $e");
+      return inputDate; // hoặc trả về chuỗi mặc định
+    }
+  }
+
   Map<String, dynamic> getBody() {
+    final expiryDate = reformatDate(expiryController.text);
+    final dateOfBirth = reformatDate(dobController.text);
+    print(cardNumberController.text);
+    print(idController.text);
+
     if (selectedPhotoIDType == "Driver's License") {
       return {
         "email": widget.email,
@@ -202,17 +230,17 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
         "address": addressController.text,
         "license_number": idController.text,
         "card_number": cardNumberController.text,
-        "date_of_birth": dobController.text,
-        "expiry_date": expiryController.text,
+        "date_of_birth": dateOfBirth,
+        "expiry_date": expiryDate,
       };
     } else if (selectedPhotoIDType == "Passport") {
       return {
         "email": widget.email,
         "first_name": firstNameController.text,
         "last_name": lastNameController.text,
-        "date_of_birth": dobController.text,
+        "date_of_birth": dateOfBirth,
         "document_number": idController.text,
-        "expiry_date": expiryController.text,
+        "expiry_date": expiryDate,
         "gender": sexController.text,
       };
     } else if (selectedPhotoIDType == "National ID") {
@@ -222,10 +250,10 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
         "last_name": lastNameController.text,
         "address": addressController.text,
         "photo_card_number": idController.text,
-        "date_of_birth": dobController.text,
+        "date_of_birth": dateOfBirth,
         "card_number": cardNumberController.text,
         "gender": sexController.text,
-        "expiry_date": expiryController.text,
+        "expiry_date": expiryDate,
       };
     }
     return <String, dynamic>{};
@@ -324,14 +352,14 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
     final inputImage = InputImage.fromFile(imageFile);
     final textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
     final RecognizedText recognizedText =
-        await textRecognizer.processImage(inputImage);
+    await textRecognizer.processImage(inputImage);
     final ScanModel model = ScanModel();
 
     final rawText = recognizedText.text.toUpperCase();
 
     if ((rawText.contains('DRIVER LICENCE') ||
-            rawText.contains('PASSPORT') ||
-            rawText.contains('NATIONAL')) &&
+        rawText.contains('PASSPORT') ||
+        rawText.contains('NATIONAL')) &&
         rawText.contains('LICENCE NO') &&
         rawText.contains('DATE OF BIRTH')) {
       final textSplit = rawText.split(RegExp(r'\r?\n'));
@@ -343,9 +371,9 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
   }
 
   Future<ScanModel> _detachDataLocal(
-    ScanModel model,
-    List<String> textSplit,
-  ) async {
+      ScanModel model,
+      List<String> textSplit,
+      ) async {
     final iLicenceNo = textSplit.indexOf('LICENCE NO') + 1;
     final iDoB = textSplit.indexOf('DATE OF BIRTH') + 1;
     int count = 0;
@@ -453,7 +481,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const MyApp()),
-        (route) => false,
+            (route) => false,
       );
     }
   }
@@ -461,9 +489,9 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
   Future<void> deleteAccount(String email) async {
     try {
       final response =
-          await http.delete(Uri.parse('$deleteAccountUri?email=$email'),
-              // Replace with your actual delete account endpoint
-              headers: {'Content-Type': 'application/json'});
+      await http.delete(Uri.parse('$deleteAccountUri?email=$email'),
+          // Replace with your actual delete account endpoint
+          headers: {'Content-Type': 'application/json'});
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -482,7 +510,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
           Navigator.of(context).pop(); // Close dialog
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => const MyApp()),
-            (Route<dynamic> route) => false,
+                (Route<dynamic> route) => false,
           );
         });
       } else {
@@ -515,6 +543,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
   initState() {
     super.initState();
     // Call the API to get the photo card
+
     initData();
   }
 
@@ -523,7 +552,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
     final responsePhotoCar = await FetchApi.getInfoCard(widget.email);
     final responsePassport = await FetchApi.getInfoPassport(widget.email);
     final responseDriverLicense =
-        await FetchApi.getInfoDriverLicense(widget.email);
+    await FetchApi.getInfoDriverLicense(widget.email);
 
     if (responsePhotoCar.isNotEmpty ||
         responsePassport.isNotEmpty ||
@@ -534,47 +563,45 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
 
         // fill dữ liệu vào các trường
         if (responsePhotoCar.isNotEmpty) {
-          idController.text = responsePhotoCar.first.cardNumber.toString();
+          idController.text = responsePhotoCar.last.cardNumber.toString();
 
-          expiryController.text =
-              responsePhotoCar.first.expiryDate.toString().split(' ')[0];
+          expiryController.text = reformatDate(
+              responsePhotoCar.last.expiryDate.toString().split(' ')[0]);
           cardNumberController.text =
-              responsePhotoCar.first.photoCardNumber.toString();
-          firstNameController.text =
-              responsePhotoCar.first.firstName.toString();
-          lastNameController.text = responsePhotoCar.first.lastName.toString();
-          addressController.text = responsePhotoCar.first.address.toString();
-          sexController.text = responsePhotoCar.first.toString();
-          dobController.text =
-              responsePhotoCar.first.dateOfBirth.toString().split(' ')[0];
+              responsePhotoCar.last.photoCardNumber.toString();
+          firstNameController.text = responsePhotoCar.last.firstName.toString();
+          lastNameController.text = responsePhotoCar.last.lastName.toString();
+          addressController.text = responsePhotoCar.last.address.toString();
+          sexController.text = responsePhotoCar.last.toString();
+          dobController.text = reformatDate(
+              responsePhotoCar.last.dateOfBirth.toString().split(' ')[0]);
           selectedPhotoIDType = 'National ID';
         } else if (responsePassport.isNotEmpty) {
-          idController.text = responsePassport.first.documentNumber.toString();
-          expiryController.text =
-              responsePassport.first.expiryDate.toString().split(' ')[0];
+          idController.text = responsePassport.last.documentNumber.toString();
+          expiryController.text = reformatDate(
+              responsePassport.last.expiryDate.toString().split(' ')[0]);
           cardNumberController.text =
-              responsePassport.first.documentNumber.toString();
-          firstNameController.text =
-              responsePassport.first.firstName.toString();
-          lastNameController.text = responsePassport.first.lastName.toString();
-          sexController.text = responsePassport.first.gender.toString();
-          dobController.text =
-              responsePassport.first.dateOfBirth.toString().split(' ')[0];
+              responsePassport.last.documentNumber.toString();
+          firstNameController.text = responsePassport.last.firstName.toString();
+          lastNameController.text = responsePassport.last.lastName.toString();
+          sexController.text = responsePassport.last.gender.toString();
+          dobController.text = reformatDate(
+              responsePassport.last.dateOfBirth.toString().split(' ')[0]);
           selectedPhotoIDType = 'Passport';
         } else if (responseDriverLicense.isNotEmpty) {
-          idController.text = responseDriverLicense.first.cardNumber.toString();
-          expiryController.text =
-              responseDriverLicense.first.expiryDate.toString().split(' ')[0];
+          idController.text = responseDriverLicense.last.cardNumber.toString();
+          expiryController.text = reformatDate(
+              responseDriverLicense.last.expiryDate.toString().split(' ')[0]);
           cardNumberController.text =
-              responseDriverLicense.first.cardNumber.toString();
+              responseDriverLicense.last.cardNumber.toString();
           firstNameController.text =
-              responseDriverLicense.first.firstName.toString();
+              responseDriverLicense.last.firstName.toString();
           lastNameController.text =
-              responseDriverLicense.first.lastName.toString();
+              responseDriverLicense.last.lastName.toString();
           addressController.text =
-              responseDriverLicense.first.address.toString();
-          dobController.text =
-              responseDriverLicense.first.dateOfBirth.toString().split(' ')[0];
+              responseDriverLicense.last.address.toString();
+          dobController.text = reformatDate(
+              responseDriverLicense.last.dateOfBirth.toString().split(' ')[0]);
           selectedPhotoIDType = 'Driver\'s License';
         }
       });
@@ -607,104 +634,104 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
           isLoading
               ? _buildCallApiError()
               : SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 16),
-                      const StepIndicator(),
-                      const SizedBox(height: 16),
-                      const SectionTitle(title: '1. Collector Identity'),
-                      const SizedBox(height: 16),
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SectionHeader(title: 'PHOTO ID'),
-                              const SizedBox(height: 16),
-                              DropdownField(
-                                hint: 'Please select a type of Photo ID',
-                                items: const [
-                                  'Passport',
-                                  'Driver\'s License',
-                                  'National ID'
-                                ],
-                                value: selectedPhotoIDType,
-                                onChanged: (value) {
-                                  setState(() {
-                                    selectedPhotoIDType = value;
-                                  });
-                                },
-                              ),
-                              const SizedBox(height: 8),
-                              PhotoIdSection(
-                                uploadedPhoto: _uploadedPhoto,
-                                getPhotoFromGallery: _getPhotoFromGallery,
-                                takePhoto: _takePhoto,
-                                scanPhoto: _scanImage,
-                                watchPhoto: _showFullPhotoDialog,
-                                deletePhoto: _deletePhoto,
-                                isCheck: selectedPhotoIDType != null,
-                              ),
-                              CustomTextField(
-                                label: 'Photo ID Document Number',
-                                controller: idController,
-                              ),
-                              const SizedBox(height: 16),
-                              CustomTextField(
-                                label: 'Expiry Date',
-                                controller: expiryController,
-                              ),
-                              if (selectedPhotoIDType == "Driver's License" ||
-                                  selectedPhotoIDType == "National ID")
-                                CustomTextField(
-                                  label: 'Card Number',
-                                  controller: cardNumberController,
-                                ),
-                              const SizedBox(height: 16),
-                              const SectionHeader(title: 'PERSONAL DETAILS'),
-                              CustomTextField(
-                                label: 'First Name',
-                                controller: firstNameController,
-                              ),
-                              CustomTextField(
-                                label: 'Last Name',
-                                controller: lastNameController,
-                              ),
-                              if (selectedPhotoIDType == "Passport")
-                                CustomTextField(
-                                  label: 'Sex',
-                                  controller: sexController,
-                                ),
-                              CustomTextField(
-                                label: 'Date of Birth',
-                                controller: dobController,
-                              ),
-                              const SizedBox(height: 16),
-                              if (selectedPhotoIDType == "Driver's License" ||
-                                  selectedPhotoIDType == "National ID")
-                                const SectionHeader(title: 'ADDRESS'),
-                              if (selectedPhotoIDType == "Driver's License" ||
-                                  selectedPhotoIDType == "National ID")
-                                CustomTextField(
-                                  label: 'Address',
-                                  controller: addressController,
-                                ),
-                              const SizedBox(height: 16),
-                              ActionButtons(
-                                formKey: _formKey,
-                                path: getPathStorage(),
-                                body: getBody(),
-                              ),
-                            ],
-                          ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 16),
+                const StepIndicator(),
+                const SizedBox(height: 16),
+                const SectionTitle(title: '1. Collector Identity'),
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SectionHeader(title: 'PHOTO ID'),
+                        const SizedBox(height: 16),
+                        DropdownField(
+                          hint: 'Please select a type of Photo ID',
+                          items: const [
+                            'Passport',
+                            'Driver\'s License',
+                            'National ID'
+                          ],
+                          value: selectedPhotoIDType,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedPhotoIDType = value;
+                            });
+                          },
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 8),
+                        PhotoIdSection(
+                          uploadedPhoto: _uploadedPhoto,
+                          getPhotoFromGallery: _getPhotoFromGallery,
+                          takePhoto: _takePhoto,
+                          scanPhoto: _scanImage,
+                          watchPhoto: _showFullPhotoDialog,
+                          deletePhoto: _deletePhoto,
+                          isCheck: selectedPhotoIDType != null,
+                        ),
+                        CustomTextField(
+                          label: 'Photo ID Document Number',
+                          controller: idController,
+                        ),
+                        const SizedBox(height: 16),
+                        CustomTextField(
+                          label: 'Expiry Date',
+                          controller: expiryController,
+                        ),
+                        if (selectedPhotoIDType == "Driver's License" ||
+                            selectedPhotoIDType == "National ID")
+                          CustomTextField(
+                            label: 'Card Number',
+                            controller: cardNumberController,
+                          ),
+                        const SizedBox(height: 16),
+                        const SectionHeader(title: 'PERSONAL DETAILS'),
+                        CustomTextField(
+                          label: 'First Name',
+                          controller: firstNameController,
+                        ),
+                        CustomTextField(
+                          label: 'Last Name',
+                          controller: lastNameController,
+                        ),
+                        if (selectedPhotoIDType == "Passport")
+                          CustomTextField(
+                            label: 'Sex',
+                            controller: sexController,
+                          ),
+                        CustomTextField(
+                          label: 'Date of Birth',
+                          controller: dobController,
+                        ),
+                        const SizedBox(height: 16),
+                        if (selectedPhotoIDType == "Driver's License" ||
+                            selectedPhotoIDType == "National ID")
+                          const SectionHeader(title: 'ADDRESS'),
+                        if (selectedPhotoIDType == "Driver's License" ||
+                            selectedPhotoIDType == "National ID")
+                          CustomTextField(
+                            label: 'Address',
+                            controller: addressController,
+                          ),
+                        const SizedBox(height: 16),
+                        ActionButtons(
+                          formKey: _formKey,
+                          path: getPathStorage(),
+                          getBody: getBody,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
+              ],
+            ),
+          ),
 
           // Settings Panel
           SlidingUpPanel(
