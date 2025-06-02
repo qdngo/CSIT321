@@ -1,21 +1,49 @@
 import 'package:flutter/material.dart';
-import 'package:sample_assist/login/login_page.dart';
+import 'package:logger/logger.dart';
+import 'package:provider/provider.dart';
+import 'package:sample_assist/feature/view/login/login_page.dart';
+import 'package:sample_assist/feature/controller/theme_provider.dart'; // <- Add your ThemeProvider file
 
-void main() {
-  runApp(const MyApp());
+var logger = Logger(
+  printer: PrettyPrinter(),
+  filter: null,
+  output: null,
+);
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Collect Assist Demo',
+      themeMode: themeProvider.themeMode,
       theme: ThemeData(
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+          brightness: Brightness.light,
+        ),
+        useMaterial3: true,
+      ),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blueGrey,
+          brightness: Brightness.dark,
+        ),
         useMaterial3: true,
       ),
       home: const LoginPage(),
