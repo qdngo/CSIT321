@@ -5,10 +5,23 @@ Overview
 
 Features
 
-1. OCR Integration: Automatically extracts information from patient identification documents.
+	•	OCR-Driven Identity Verification
+	•	Automatically scans and processes identity documents (e.g., passports, driving licenses).
+	•	Populates medical forms to streamline the patient onboarding process.
+	•	Reduces administrative load on healthcare staff and minimizes data errors.
+	•	Anomaly and Threat Detection
+	•	Implements user behavior analysis (UBA) and threat detection to safeguard patient data.
+	•	Provides real-time monitoring and alerting for unauthorized access or anomalies.
 
-2. Data Validation Interface: Allows users to verify and correct OCR results.
+Project Benefits
 
-3. Seamless System Integration: Integrates with existing hospital management systems for real-time data updating.
+	•	Saves time and reduces administrative costs.
+	•	Enhances data integrity and improves patient safety.
+	•	Provides a better patient experience by automating identity verification.
+	•	Mitigates security risks with real-time threat detection.
 
-4. Responsive User Interface: Built with Flutter, providing a seamless experience across desktop, tablet, and mobile devices.
+Stakeholders
+
+	•	Primary Users: Doctors, nurses, hospitals, clinics, laboratories, and patients.
+	•	Client and Partner: Sample Assist Pty Ltd.
+	•	Development Team: University of Wollongong CSIT321 project students.
