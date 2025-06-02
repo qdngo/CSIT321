@@ -1,92 +1,61 @@
+# 🦾 Armadillo Backend – Patient Identity Verification System
 
+Welcome to the backend repository of the **Armadillo Project**, a smart healthcare solution developed to streamline patient identity verification using OCR and AI.
 
+This backend system powers the secure API services and OCR processing capabilities behind Armadillo's mobile application. Built using **FastAPI**, **PostgreSQL**, and **PaddleOCR**, it provides endpoints for image upload, identity data extraction, user authentication, and secure data storage.
 
+---
 
-🛠️ Backend Installation Setup (Planned Deployment)
-This section outlines the future steps for installing and running the Armadillo backend system, which includes the API server, OCR service, and database integration.
+## 🚀 Features
 
+- JWT-based user authentication and role management
+- Image upload and real-time OCR processing (via PaddleOCR)
+- PostgreSQL database with SQLAlchemy ORM
+- RESTful API interface (`/docs`) with Swagger UI
+- Environment-ready for Docker deployment
+- Built-in CI/CD support with GitHub Actions
 
-🔧 System Requirements
+---
 
-Python 3.11+
-pip (Python package manager)
-PostgreSQL (hosted locally or on GCP/AWS RDS)
-Docker (optional for containerized deployment)
-Git
-Environment variables file (.env)
+## 📦 Local Installation
 
+### Prerequisites
+- Python 3.11+
+- pip
+- PostgreSQL
+- Git
+- (Optional) Docker and Docker Compose
 
-📦 Local Installation (Manual)
-
-Clone the Repository
+### 1. Clone the repository
+```bash
 git clone https://github.com/your-org/armadillo-backend.git
 cd armadillo-backend
+```
 
-Set Up Virtual Environment
+### 2. Set up a virtual environment
+```bash
 python -m venv venv
-source venv/bin/activate  # For Mac/Linux
-venv\Scripts\activate     # For Windows
+source venv/bin/activate      # Mac/Linux
+venv\Scripts\activate         # Windows
+```
 
-Install Dependencies
+###3. Install dependencies
+```bash
 pip install --upgrade pip
 pip install -r requirements.txt
+```
 
+###4. Configure environment variables
+Create a .env file in the project root directory with the following keys:
 
-Configure Environment Variables
-Create a .env file in the project root:
+```bash
 DATABASE_URL=postgresql://username:password@localhost:5432/armadillo_db
-SECRET_KEY=your_secret_key
-OCR_MODEL_PATH=./models/paddleocr/
+```
 
-
-Run the FastAPI Server
+###5. Run the FastAPI server
+```bash
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
 
-
-Test the API
-Open your browser and navigate to:
+6. Open the API docs in your browser
 http://localhost:8000/docs
-
-
-
-🐳 Docker Installation (Recommended for Deployment)
-
-Build and Run Using Docker
-docker build -t armadillo-backend .
-docker run -d -p 8000:8000 --env-file .env armadillo-backend
-
-
-Optional: Use Docker Compose
-Add this docker-compose.yml file:
-version: "3.8"
-services:
-  backend:
-    build: .
-    ports:
-      - "8000:8000"
-    env_file:
-      - .env
-    depends_on:
-      - db
-  db:
-    image: postgres:13
-    environment:
-      POSTGRES_USER: youruser
-      POSTGRES_PASSWORD: yourpassword
-      POSTGRES_DB: armadillo_db
-    ports:
-      - "5432:5432"
-
-      
-Then run:
-
-docker-compose up --build
-
-
-
-✅ Verification
-
-Visit http://localhost:8000/docs to test endpoints
-Ensure OCR service responds by uploading a sample ID image
-Confirm database writes using pgAdmin or CLI queries
-
