@@ -559,7 +559,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
   }
 
   Future<void> initData() async {
-    // call api lấy data
+    // call api take data
     final responsePhotoCar = await FetchApi.getInfoCard(widget.email);
     final responsePassport = await FetchApi.getInfoPassport(widget.email);
     final responseDriverLicense =
@@ -568,11 +568,11 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
     if (responsePhotoCar.isNotEmpty ||
         responsePassport.isNotEmpty ||
         responseDriverLicense.isNotEmpty) {
-      // check if it gets data
+      // check whether it has data
       setState(() {
         isLoading = false;
 
-        // fill data to all fields
+        // fill data
         if (responsePhotoCar.isNotEmpty) {
           idController.text = responsePhotoCar.last.cardNumber.toString();
 
