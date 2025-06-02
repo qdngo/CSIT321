@@ -246,6 +246,7 @@ class _LoginPageState extends State<LoginPage> {
                           ElevatedButton(
                             onPressed: () async {
                               final response = await _login();
+                              if (!mounted) return;
                               if (response == true) {
                                 showDialog(
                                     context: context,
