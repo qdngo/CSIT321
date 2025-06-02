@@ -259,6 +259,7 @@ class _LoginPageState extends State<LoginPage> {
                                 Timer(
                                   Duration(seconds: 2),
                                       () {
+                                    if (!mounted) return; // ✅ Edited
                                     Navigator.pop(context);
                                     Navigator.of(context).pushAndRemoveUntil(
                                       MaterialPageRoute(
