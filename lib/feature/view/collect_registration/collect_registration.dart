@@ -103,10 +103,10 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
         uiSettings: [
           AndroidUiSettings(
             toolbarTitle: 'Crop image',
-            lockAspectRatio: false, // Giữ nguyên tỷ lệ đã đặt
+            lockAspectRatio: false, 
           ),
           IOSUiSettings(
-            aspectRatioLockEnabled: false, // Khóa tỷ lệ
+            aspectRatioLockEnabled: false,
           ),
         ],
       );
@@ -198,21 +198,21 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
     DateTime parsedDate;
 
     try {
-      // Nếu chuỗi giống định dạng ISO: yyyy-MM-dd
+      // if string in format ISO: yyyy-MM-dd
       if (RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(inputDate)) {
         parsedDate = DateTime.parse(inputDate);
       } else {
-        // Nếu chuỗi có định dạng dd MMM yyyy (ví dụ: 23 Mar 2029)
+        // if string in format dd MMM yyyy (ví dụ: 23 Mar 2029)
         final DateFormat inputFormat = DateFormat('dd MMM yyyy', 'en_US');
         parsedDate = inputFormat.parse(inputDate);
       }
 
-      // Format lại sang dd MMM yyyy
+      // reformat to dd MMM yyyy
       final DateFormat outputFormat = DateFormat('dd MMM yyyy', 'en_US');
       return outputFormat.format(parsedDate);
     } catch (e) {
       print("Lỗi khi định dạng ngày: $e");
-      return inputDate; // hoặc trả về chuỗi mặc định
+      return inputDate; // return default string
     }
   }
 
@@ -299,7 +299,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
         ),
       );
 
-      // Tạo file từ đường dẫn
+      // Create file directory
       var file = File(filePath);
 
       if (!await file.exists()) {
@@ -307,19 +307,19 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
         return;
       }
 
-      // Tạo yêu cầu multipart
+      // create multipart request
       var request = http.MultipartRequest('POST', url)
         ..headers['Accept'] = 'application/json'
         ..files.add(await http.MultipartFile.fromPath('file', file.path));
 
-      // Gửi yêu cầu
+      // send request
       var response = await request.send();
 
-      // Đọc phần hồi
+      // read response
       if (!mounted) return;
       Navigator.pop(context);
 
-      // Kiểm tra phản hồi
+      // check response
       if (response.statusCode == 200) {
         var responseBody = await response.stream.bytesToString();
         final data = jsonDecode(responseBody)['extracted_data'] ?? '';
@@ -548,7 +548,7 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
   }
 
   Future<void> initData() async {
-    // call api lấy data
+    // call api take data
     final responsePhotoCar = await FetchApi.getInfoCard(widget.email);
     final responsePassport = await FetchApi.getInfoPassport(widget.email);
     final responseDriverLicense =
@@ -557,11 +557,11 @@ class _CollectRegistrationScreenState extends State<CollectRegistration> {
     if (responsePhotoCar.isNotEmpty ||
         responsePassport.isNotEmpty ||
         responseDriverLicense.isNotEmpty) {
-      // check xem có dữ liệu hay không rồi chuyển trạng thái
+      // check whether it has data
       setState(() {
         isLoading = false;
 
-        // fill dữ liệu vào các trường
+        // fill data
         if (responsePhotoCar.isNotEmpty) {
           idController.text = responsePhotoCar.last.cardNumber.toString();
 
