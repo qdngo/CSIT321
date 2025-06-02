@@ -40,9 +40,10 @@ frontend/app.*.symbols
 frontend/app.*.map.json
 
 # Android Studio will place build artifacts here
-frontend//android/app/debug
-frontend//android/app/profile
-frontend//android/app/release
+frontend/android/app/debug
+frontend/android/app/profile
+frontend/android/app/release
 
 # Environment variables
 frontend/.env
+*/.DS_Store

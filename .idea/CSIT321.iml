@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/frontend/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/build" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/camera_avfoundation/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/camera_avfoundation/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/camera_avfoundation/build" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/camera_avfoundation/example/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/camera_avfoundation/example/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/camera_avfoundation/example/build" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/flutter_secure_storage/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/flutter_secure_storage/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/flutter_secure_storage/build" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/flutter_secure_storage/example/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/flutter_secure_storage/example/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/flutter_secure_storage/example/build" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/google_mlkit_commons/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/google_mlkit_commons/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/google_mlkit_commons/build" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/google_mlkit_text_recognition/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/google_mlkit_text_recognition/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/google_mlkit_text_recognition/build" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/image_cropper/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/image_cropper/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/image_cropper/build" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/image_cropper/example/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/image_cropper/example/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/image_cropper/example/build" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/image_picker_ios/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/image_picker_ios/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/image_picker_ios/build" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/image_picker_ios/example/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/image_picker_ios/example/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/image_picker_ios/example/build" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/path_provider_foundation/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/path_provider_foundation/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/path_provider_foundation/build" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/path_provider_foundation/example/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/path_provider_foundation/example/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/path_provider_foundation/example/build" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/permission_handler_apple/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/permission_handler_apple/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/permission_handler_apple/build" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/permission_handler_apple/example/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/permission_handler_apple/example/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/ios/.symlinks/plugins/permission_handler_apple/example/build" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>
