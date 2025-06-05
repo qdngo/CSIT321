@@ -1,0 +1,2723 @@
+Subject: [PATCH] fix: Extract data
+---
+Index: lib/core/extension/string_ext.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/core/extension/string_ext.dart b/lib/core/extension/string_ext.dart
+new file mode 100644
+--- /dev/null	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
++++ b/lib/core/extension/string_ext.dart	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
+@@ -0,0 +1,44 @@
++extension TextProcessing on String {
++  String separateNumbersAndLetters() {
++    return replaceAllMapped(
++        RegExp(r'(\d)([A-Za-z])'), (match) => '${match[1]} ${match[2]}')
++        .replaceAllMapped(
++        RegExp(r'([A-Za-z])(\d)'), (match) => '${match[1]} ${match[2]}');
++  }
++
++  String splitStickyText() {
++    return replaceAllMapped(RegExp(r'(?<=[a-z])(?=[A-Z])'), (match) => ' ');
++  }
++
++  bool isAddress() {
++    RegExp hasLetterAndNumber = RegExp(r'^(?=.*[A-Za-z])(?=.*\d).+$');
++    if (hasLetterAndNumber.hasMatch(this)) {
++      return true;
++    }
++    return false;
++  }
++
++  bool isName() {
++    RegExp onlyLetters = RegExp(r'^[A-Za-z\s]+$');
++    if (onlyLetters.hasMatch(this)) {
++      return true;
++    }
++    return false;
++  }
++
++  bool isDate() {
++    RegExp regex = RegExp(r'^\d{2}[a-zA-Z/]*\d{4}$');
++    if (regex.hasMatch(this)) {
++      return true;
++    }
++    return false;
++  }
++
++  bool isNumber() {
++    RegExp regex = RegExp(r'^\d+$');
++    if (regex.hasMatch(this)) {
++      return true;
++    }
++    return false;
++  }
++}
+\ No newline at end of file
+Index: lib/core/services/fetch_api.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/core/services/fetch_api.dart b/lib/core/services/fetch_api.dart
+new file mode 100644
+--- /dev/null	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
++++ b/lib/core/services/fetch_api.dart	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
+@@ -0,0 +1,88 @@
++import 'dart:convert';
++
++import 'package:http/http.dart' as http;
++import 'package:scan_ml_text_kit/main.dart';
++import 'package:scan_ml_text_kit/model/driver_license.dart';
++import 'package:scan_ml_text_kit/model/passport.dart';
++import 'package:scan_ml_text_kit/model/photo_card.dart';
++
++class FetchApi {
++  FetchApi._();
++
++  static const String baseUrl = '34.132.238.165:8000';
++  static const String getPhotoCard = '/get-photo-card';
++  static const String getPassport = '/get-passport';
++  static const String getDriverLicense = '/get-driver-license';
++
++  static Future<List<PhotoCard>> getInfoCard(String email) async {
++    var uri = Uri.http(baseUrl, getPhotoCard, {'email': email});
++    final List<PhotoCard> photoCard = [];
++    try {
++      final response = await http.get(uri);
++      if (response.statusCode == 200) {
++        final data = json.decode(response.body);
++
++        if (data is Map<String, dynamic>) {
++          photoCard.add(PhotoCard.fromJson(data));
++        } else if (data is List<dynamic>) {
++          for (var item in data) {
++            photoCard.add(PhotoCard.fromJson(item));
++          }
++        }
++      } else {
++        throw Exception('Failed to load photo card');
++      }
++    } catch (e) {
++      logger.e('Error: $e');
++    }
++    return photoCard;
++  }
++
++  static Future<List<Passport>> getInfoPassport(String email) async {
++    var uri = Uri.http(baseUrl, getPassport, {'email': email});
++    final List<Passport> passport = [];
++    try {
++      final response = await http.get(uri);
++      if (response.statusCode == 200) {
++        final data = json.decode(response.body);
++
++        if (data is Map<String, dynamic>) {
++          passport.add(Passport.fromJson(data));
++        } else if (data is List<dynamic>) {
++          for (var item in data) {
++            passport.add(Passport.fromJson(item));
++          }
++        }
++      } else {
++        throw Exception('Failed to load photo card');
++      }
++    } catch (e) {
++      logger.e('Error: $e');
++    }
++    return passport;
++  }
++
++  static Future<List<DriverLicense>> getInfoDriverLicense(String email) async {
++    var uri = Uri.http(baseUrl, getDriverLicense, {'email': email});
++    final List<DriverLicense> driverLicenses = [];
++    try {
++      final response = await http.get(uri);
++      if (response.statusCode == 200) {
++        final data = json.decode(response.body);
++
++        if (data is Map<String, dynamic>) {
++          driverLicenses.add(DriverLicense.fromJson(data));
++        } else if (data is List<dynamic>) {
++          for (var item in data) {
++            driverLicenses.add(DriverLicense.fromJson(item));
++          }
++        }
++      } else {
++        throw Exception('Failed to load photo card');
++      }
++    } catch (e) {
++      logger.e('Error: $e');
++    }
++    return driverLicenses;
++  }
++}
+Index: lib/core/utils/consts.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/core/utils/consts.dart b/lib/core/utils/consts.dart
+new file mode 100644
+--- /dev/null	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
++++ b/lib/core/utils/consts.dart	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
+@@ -0,0 +1,19 @@
++import 'package:flutter/material.dart';
++
++String baseUri = "http://34.132.238.165:8000";
++
++
++String pathProcessDriverLicense = '/process_driver_license/';
++String pathProcessPassport = '/process_passport/';
++String pathProcessPhotoCard = '/process_photo_card/';
++String pathStoreDriverLicense = '/store_driver_license/';
++String pathStorePassport = '/store_passport/';
++String pathStorePhotoCard = '/store_photo_card/';
++String pathGetPassport ='/get-passport/';
++String pathGetPhotoCard ='/get-photo-card/';
++String pathGetDriverLicense ='/get-driver-license/';
++String loginUri = "$baseUri/login";
++String registerUri = "$baseUri/signup";
++String deleteAccountUri = "$baseUri/delete_account";
++
++Color colorPrimary = const Color(0xFF1A1448);
+\ No newline at end of file
+Index: lib/collect_registration/widgets/action_buttons.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/collect_registration/widgets/action_buttons.dart b/lib/core/widgets/action_buttons.dart
+rename from lib/collect_registration/widgets/action_buttons.dart
+rename to lib/core/widgets/action_buttons.dart
+--- a/lib/collect_registration/widgets/action_buttons.dart	(revision 7612763ca273c3d10e019d952701b4b987c8649a)
++++ b/lib/core/widgets/action_buttons.dart	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
+@@ -3,7 +3,8 @@
+ import 'package:flutter/foundation.dart';
+ import 'package:flutter/material.dart';
+ import 'package:http/http.dart' as http;
+-import 'package:scan_ml_text_kit/utils/consts.dart';
++import 'package:scan_ml_text_kit/core/utils/consts.dart';
++import 'package:scan_ml_text_kit/main.dart';
+ 
+ class ActionButtons extends StatelessWidget {
+   final GlobalKey<FormState> formKey;
+Index: lib/collect_registration/widgets/custom_text_field.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/collect_registration/widgets/custom_text_field.dart b/lib/core/widgets/custom_text_field.dart
+rename from lib/collect_registration/widgets/custom_text_field.dart
+rename to lib/core/widgets/custom_text_field.dart
+--- a/lib/collect_registration/widgets/custom_text_field.dart	(revision 7612763ca273c3d10e019d952701b4b987c8649a)
++++ b/lib/core/widgets/custom_text_field.dart	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
+@@ -3,9 +3,11 @@
+ class CustomTextField extends StatelessWidget {
+   final String label;
+   final TextEditingController? controller;
++  final bool? isValidate;
+   const CustomTextField({
+     required this.label,
+     this.controller, // Add the controller to the constructor
++    this.isValidate = true,
+     super.key,
+   });
+ 
+@@ -16,7 +18,7 @@
+         const SizedBox(height: 8),
+         TextFormField(
+           validator: (value) {
+-            if (value == null || value.isEmpty) {
++            if (value == null || value.isEmpty && isValidate!) {
+               return 'This field is required';
+             }
+             return null;
+@@ -49,4 +51,4 @@
+       ],
+     );
+   }
+-}
++}
+\ No newline at end of file
+Index: lib/collect_registration/widgets/section_header.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/collect_registration/widgets/section_header.dart b/lib/core/widgets/section_header.dart
+rename from lib/collect_registration/widgets/section_header.dart
+rename to lib/core/widgets/section_header.dart
+--- a/lib/collect_registration/widgets/section_header.dart	(revision 7612763ca273c3d10e019d952701b4b987c8649a)
++++ b/lib/core/widgets/section_header.dart	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
+@@ -13,4 +13,4 @@
+       ),
+     );
+   }
+-}
++}
+\ No newline at end of file
+Index: lib/feature/controller/theme_provider.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/feature/controller/theme_provider.dart b/lib/feature/controller/theme_provider.dart
+new file mode 100644
+--- /dev/null	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
++++ b/lib/feature/controller/theme_provider.dart	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
+@@ -0,0 +1,14 @@
++import 'package:flutter/material.dart';
++
++class ThemeProvider extends ChangeNotifier {
++  ThemeMode _themeMode = ThemeMode.light;
++
++  ThemeMode get themeMode => _themeMode;
++
++  bool get isDarkMode => _themeMode == ThemeMode.dark;
++
++  void toggleTheme(bool isOn) {
++    _themeMode = isOn ? ThemeMode.dark : ThemeMode.light;
++    notifyListeners();
++  }
++}
+Index: lib/collect_registration/camera_with_frame.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/collect_registration/camera_with_frame.dart b/lib/feature/view/collect_registration/camera_with_frame.dart
+rename from lib/collect_registration/camera_with_frame.dart
+rename to lib/feature/view/collect_registration/camera_with_frame.dart
+--- a/lib/collect_registration/camera_with_frame.dart	(revision 7612763ca273c3d10e019d952701b4b987c8649a)
++++ b/lib/feature/view/collect_registration/camera_with_frame.dart	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
+@@ -1,6 +1,6 @@
+ import 'package:camera/camera.dart';
++import 'package:flutter/foundation.dart';
+ import 'package:flutter/material.dart';
+-import 'package:scan_ml_text_kit/main.dart';
+ 
+ class CameraWithFrame extends StatefulWidget {
+   const CameraWithFrame({
+@@ -17,6 +17,8 @@
+ }
+ 
+ class _CameraWithFrameState extends State<CameraWithFrame> {
++
++
+   @override
+   Widget build(BuildContext context) {
+     return Scaffold(
+@@ -27,7 +29,7 @@
+             return Stack(
+               children: [
+                 CameraPreview(widget.controller),
+-                // Button take picture
++                // Nút chụp ảnh
+                 Positioned(
+                   bottom: 20,
+                   left: 0,
+@@ -36,6 +38,7 @@
+                     child: FloatingActionButton(
+                       onPressed: () async {
+                         try {
++                          // Chụp ảnh
+                           await widget.initializeControllerFuture;
+                           final file = await widget.controller.takePicture();
+ 
+@@ -46,20 +49,22 @@
+                           // ignore: use_build_context_synchronously
+                           Navigator.pop(context, file);
+                         } catch (e) {
+-                          logger.e('Error capturing image: $e');
++                          if (kDebugMode) {
++                            print('Error capturing image: $e');
++                          }
+                         }
+                       },
+-                      child: const Icon(Icons.camera_alt),
++                      child: Icon(Icons.camera_alt),
+                     ),
+                   ),
+                 ),
+               ],
+             );
+           } else {
+-            return const Center(child: CircularProgressIndicator());
++            return Center(child: CircularProgressIndicator());
+           }
+         },
+       ),
+     );
+   }
+-}
++}
+\ No newline at end of file
+Index: lib/feature/view/collect_registration/camera_with_scan.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/feature/view/collect_registration/camera_with_scan.dart b/lib/feature/view/collect_registration/camera_with_scan.dart
+new file mode 100644
+--- /dev/null	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
++++ b/lib/feature/view/collect_registration/camera_with_scan.dart	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
+@@ -0,0 +1,291 @@
++import 'package:camera/camera.dart';
++import 'package:flutter/foundation.dart';
++import 'package:flutter/material.dart';
++
++class CameraWithScan extends StatefulWidget {
++  const CameraWithScan({
++    super.key,
++    required this.controller,
++    required this.initializeControllerFuture,
++  });
++
++  final CameraController controller;
++  final Future<void> initializeControllerFuture;
++
++  @override
++  State<CameraWithScan> createState() => _CameraWithScanState();
++}
++
++class _CameraWithScanState extends State<CameraWithScan> {
++  @override
++  void initState() {
++    initData();
++    super.initState();
++  }
++
++  initData() async {
++    await Future.delayed(Duration(seconds: 4));
++    try {
++      // Chụp ảnh
++      await widget.initializeControllerFuture;
++      final file = await widget.controller.takePicture();
++      Navigator.pop(context, file);
++    } catch (e) {
++      if (kDebugMode) {
++        print('Error capturing image: $e');
++      }
++    }
++  }
++
++  @override
++  Widget build(BuildContext context) {
++    return Scaffold(
++      body: FutureBuilder<void>(
++        future: widget.initializeControllerFuture,
++        builder: (context, snapshot) {
++          if (snapshot.connectionState == ConnectionState.done) {
++            return Stack(
++              children: [
++                CameraPreview(widget.controller),
++
++                // Tạo lớp nền tối với độ mờ xung quanh khuôn
++                Positioned.fill(
++                  child: Container(
++                    color: Colors.transparent, // Nền tối xung quanh khuôn
++                  ),
++                ),
++
++                // Tạo khuôn cắt với viền đỏ và phần giữa trong suốt
++                Center(
++                  child: Container(
++                    width: MediaQuery.of(context).size.width * 0.8,
++                    height: (MediaQuery.of(context).size.width * 0.8 * 0.63),
++                    decoration: BoxDecoration(
++                      border:
++                      Border.all(color: Colors.red, width: 3), // Viền đỏ
++                      color: Colors.transparent, // Phần giữa trong suốt
++                    ),
++                  ),
++                ),
++
++                Positioned(
++                  top: 15,
++                  left: 10,
++                  child: IconButton(
++                    onPressed: () {
++                      Navigator.pop(context);
++                    },
++                    icon: Icon(
++                      Icons.arrow_back,
++                      color: Colors.white,
++                    ),
++                  ),
++                ),
++              ],
++            );
++          } else {
++            return Center(child: CircularProgressIndicator());
++          }
++        },
++      ),
++    );
++  }
++}
++
++// import 'dart:async';
++// import 'dart:typed_data';
++// import 'package:camera/camera.dart';
++// import 'package:flutter/foundation.dart';
++// import 'package:flutter/material.dart';
++// import 'package:google_ml_kit/google_ml_kit.dart';
++//
++// class CameraWithScan extends StatefulWidget {
++//   const CameraWithScan({
++//     super.key,
++//     required this.controller,
++//     required this.initializeControllerFuture,
++//   });
++//
++//   final CameraController controller;
++//   final Future<void> initializeControllerFuture;
++//
++//   @override
++//   State<CameraWithScan> createState() => _CameraWithScanState();
++// }
++//
++// class _CameraWithScanState extends State<CameraWithScan> {
++//   bool _isDetecting = false;
++//   bool _hasCaptured = false;
++//   final TextRecognizer _textRecognizer = GoogleMlKit.vision.textRecognizer();
++//
++//   @override
++//   void initState() {
++//     super.initState();
++//     _startCameraStream();
++//   }
++//
++//   Future<void> _startCameraStream() async {
++//     // Make sure the camera is initialized
++//     await widget.initializeControllerFuture;
++//
++//     // Start streaming frames
++//     widget.controller.startImageStream((CameraImage image) async {
++//       // If we're already processing or we already captured, skip
++//       if (_isDetecting || _hasCaptured) return;
++//       _isDetecting = true;
++//
++//       try {
++//         final inputImage = _convertCameraImage(image);
++//         final recognizedText = await _textRecognizer.processImage(inputImage);
++//
++//         // If text likely indicates an ID, capture and return
++//         if (_detectID(recognizedText.text)) {
++//           _hasCaptured = true;
++//           final file = await widget.controller.takePicture();
++//           await widget.controller.stopImageStream();
++//
++//           if (mounted) {
++//             Navigator.pop(context, file);
++//           }
++//         }
++//       } catch (e) {
++//         if (kDebugMode) {
++//           print('Error during ID detection: $e');
++//         }
++//       } finally {
++//         _isDetecting = false;
++//       }
++//     });
++//   }
++//
++//   /// Simple check if the recognized text suggests we found an ID.
++//   bool _detectID(String text) {
++//     final pattern = RegExp(r'(passport|license|national\s?id)', caseSensitive: false);
++//     return pattern.hasMatch(text);
++//   }
++//
++//   /// Convert [CameraImage] -> ML Kit [InputImage].
++//   InputImage _convertCameraImage(CameraImage cameraImage) {
++//     // Combine all planes into a single Uint8List
++//     final WriteBuffer allBytes = WriteBuffer();
++//     for (final Plane plane in cameraImage.planes) {
++//       allBytes.putUint8List(plane.bytes);
++//     }
++//     final bytes = allBytes.done().buffer.asUint8List();
++//
++//     // Prepare metadata for ML Kit
++//     final Size imageSize = Size(
++//       cameraImage.width.toDouble(),
++//       cameraImage.height.toDouble(),
++//     );
++//
++//     // Convert the camera's sensor rotation to ML Kit's rotation format
++//     final rotation = _rotationIntToImageRotation(
++//       widget.controller.description.sensorOrientation,
++//     );
++//
++//     // Convert raw image format to an ML Kit enum
++//     final format = _rawFormatToInputImageFormat(cameraImage.format.raw);
++//
++//     // Plane data (bytesPerRow, etc.)
++//     final planeData = cameraImage.planes.map(
++//           (Plane plane) {
++//         return InputImagePlaneMetadata(
++//           bytesPerRow: plane.bytesPerRow,
++//           width: cameraImage.width,
++//           height: cameraImage.height,
++//         );
++//       },
++//     ).toList();
++//
++//     // Create the input image with metadata
++//     return InputImage.fromBytes(
++//       bytes: bytes,
++//       inputImageData: InputImageData(
++//         size: imageSize,
++//         imageRotation: rotation,
++//         inputImageFormat: format,
++//         planeData: planeData,
++//       ),
++//     );
++//   }
++//
++//   /// Convert integer rotation degrees to [InputImageRotation].
++//   InputImageRotation _rotationIntToImageRotation(int rotation) {
++//     switch (rotation) {
++//       case 90:
++//         return InputImageRotation.rotation90deg;
++//       case 180:
++//         return InputImageRotation.rotation180deg;
++//       case 270:
++//         return InputImageRotation.rotation270deg;
++//       case 0:
++//       default:
++//         return InputImageRotation.rotation0deg;
++//     }
++//   }
++//
++//   /// Convert raw camera format to an ML Kit [InputImageFormat].
++//   InputImageFormat _rawFormatToInputImageFormat(int raw) {
++//     // Common values: 17 == NV21, 842094169 == YUV_420_888
++//     switch (raw) {
++//       case 17:
++//         return InputImageFormat.nv21;
++//       case 842094169:
++//         return InputImageFormat.yuv420;
++//       default:
++//       // Fallback if unknown
++//         return InputImageFormat.yuv420;
++//     }
++//   }
++//
++//   @override
++//   void dispose() {
++//     // Close the text recognizer
++//     _textRecognizer.close();
++//     super.dispose();
++//   }
++//
++//   @override
++//   Widget build(BuildContext context) {
++//     return Scaffold(
++//       body: FutureBuilder<void>(
++//         future: widget.initializeControllerFuture,
++//         builder: (context, snapshot) {
++//           if (snapshot.connectionState == ConnectionState.done) {
++//             return Stack(
++//               children: [
++//                 // Camera preview
++//                 CameraPreview(widget.controller),
++//                 // Optional: A red frame or overlay for alignment
++//                 Center(
++//                   child: Container(
++//                     width: MediaQuery.of(context).size.width * 0.8,
++//                     height: (MediaQuery.of(context).size.width * 0.8 * 0.63),
++//                     decoration: BoxDecoration(
++//                       border: Border.all(color: Colors.red, width: 3),
++//                       color: Colors.transparent,
++//                     ),
++//                   ),
++//                 ),
++//                 // Back button
++//                 Positioned(
++//                   top: 15,
++//                   left: 10,
++//                   child: IconButton(
++//                     onPressed: () {
++//                       Navigator.pop(context);
++//                     },
++//                     icon: const Icon(Icons.arrow_back, color: Colors.white),
++//                   ),
++//                 ),
++//               ],
++//             );
++//           } else {
++//             return const Center(child: CircularProgressIndicator());
++//           }
++//         },
++//       ),
++//     );
++//   }
++// }
+\ No newline at end of file
+Index: lib/feature/view/collect_registration/collect_registration.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/feature/view/collect_registration/collect_registration.dart b/lib/feature/view/collect_registration/collect_registration.dart
+new file mode 100644
+--- /dev/null	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
++++ b/lib/feature/view/collect_registration/collect_registration.dart	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
+@@ -0,0 +1,802 @@
++import 'dart:convert';
++import 'dart:io';
++import 'package:provider/provider.dart';
++import 'package:scan_ml_text_kit/core/utils/consts.dart';
++import 'package:scan_ml_text_kit/extension/string_ext.dart';
++import 'package:scan_ml_text_kit/feature/view/collect_registration/processing_page.dart';
++import 'package:scan_ml_text_kit/feature/view/collect_registration/scan_camera_screen.dart';
++import 'package:scan_ml_text_kit/main.dart';
++import 'package:scan_ml_text_kit/model/scan_model.dart';
++import 'package:sliding_up_panel/sliding_up_panel.dart';
++import 'package:flutter/material.dart';
++import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
++import 'package:image_cropper/image_cropper.dart';
++import 'package:image_picker/image_picker.dart';
++import '../../../core/services/fetch_api.dart';
++import '../../../core/widgets/step_indicator.dart';
++import '../../../core/widgets/section_title.dart';
++import '../../../core/widgets/photo_id_section.dart';
++import '../../../core/widgets/dropdown_field.dart';
++import '../../../core/widgets/custom_text_field.dart';
++import '../../../core/widgets/action_buttons.dart';
++import '../../../core/widgets/section_header.dart';
++import '../../controller/theme_provider.dart';
++import 'package:http/http.dart' as http;
++
++class CollectRegistration extends StatefulWidget {
++  const CollectRegistration({super.key, required this.email});
++
++  final String email;
++
++  @override
++  State<CollectRegistration> createState() => _CollectRegistrationScreenState();
++}
++
++class _CollectRegistrationScreenState extends State<CollectRegistration> {
++  final _formKey = GlobalKey<FormState>();
++  bool isError = true;
++  String? selectedPhotoIDType;
++  final ImagePicker _imagePicker = ImagePicker();
++  File? _uploadedPhoto;
++  bool isLoading = true;
++  bool _isPanelOpen = false; // Track whether the panel is open or closed
++
++  final idController = TextEditingController();
++  final expiryController = TextEditingController();
++  final cardNumberController = TextEditingController();
++  final firstNameController = TextEditingController();
++  final lastNameController = TextEditingController();
++  final addressController = TextEditingController();
++  final sexController = TextEditingController();
++  final dobController = TextEditingController();
++
++  final PanelController _panelController =
++      PanelController(); // Controller for the sliding panel
++
++  // Method to toggle the panel's state
++  void _togglePanel() {
++    if (_isPanelOpen) {
++      _panelController.close();
++    } else {
++      _panelController.open();
++    }
++    setState(() {
++      _isPanelOpen = !_isPanelOpen;
++    });
++  }
++
++  // Method to get a photo from the gallery
++  Future<void> _getPhotoFromGallery() async {
++    try {
++      final XFile? pickedFile =
++          await _imagePicker.pickImage(source: ImageSource.gallery);
++      if (pickedFile != null) {
++        _uploadedPhoto = File(pickedFile.path);
++        if (_uploadedPhoto != null) {
++          final model = await _detachTextFromFile(_uploadedPhoto!);
++
++          setState(() {
++            firstNameController.text = model.firstName ?? '';
++            lastNameController.text = model.lastName ?? '';
++            addressController.text = model.address ?? '';
++            dobController.text = model.dateOfBirth ?? '';
++            cardNumberController.text = model.cardNumber ?? '';
++            idController.text = model.licenseNumber ?? '';
++            expiryController.text = model.expiredDate ?? '';
++          });
++        }
++
++        await uploadFileDriver(_uploadedPhoto!.path, getPathProcess());
++      }
++      setState(() {});
++    } catch (e) {
++      logger.e('Error selecting photo: $e');
++    }
++  }
++
++  Future<XFile?> pickAndCropImage() async {
++    final XFile? pickedFile =
++        await _imagePicker.pickImage(source: ImageSource.camera);
++
++    if (pickedFile != null) {
++      CroppedFile? croppedFile = await ImageCropper().cropImage(
++        sourcePath: pickedFile.path,
++        uiSettings: [
++          AndroidUiSettings(
++            toolbarTitle: 'Crop image',
++            lockAspectRatio: false, // Giữ nguyên tỷ lệ đã đặt
++          ),
++          IOSUiSettings(
++            aspectRatioLockEnabled: false, // Khóa tỷ lệ
++          ),
++        ],
++      );
++
++      if (croppedFile != null) {
++        return XFile(croppedFile.path);
++      }
++    }
++
++    return null;
++  }
++
++  //Method to take a photo using the camera
++  Future<void> _takePhoto() async {
++    try {
++      final XFile? pickedFile = await pickAndCropImage();
++      if (pickedFile != null) {
++        _uploadedPhoto = File(pickedFile.path);
++        if (_uploadedPhoto != null) {
++          final model = await _detachTextFromFile(_uploadedPhoto!);
++
++          setState(() {
++            firstNameController.text = model.firstName ?? '';
++            lastNameController.text = model.lastName ?? '';
++            addressController.text = model.address ?? '';
++            dobController.text = model.dateOfBirth ?? '';
++            cardNumberController.text = model.cardNumber ?? '';
++            idController.text = model.licenseNumber ?? '';
++            expiryController.text = model.expiredDate ?? '';
++          });
++        }
++
++        await uploadFileDriver(_uploadedPhoto!.path, getPathProcess());
++      }
++      setState(() {});
++    } catch (e) {
++      logger.e('Error capturing photo: $e');
++    }
++  }
++
++  //Method to take a photo using the camera
++  Future<void> _scanImage() async {
++    try {
++      final ScanModel results = await Navigator.push(
++        context,
++        MaterialPageRoute(
++          builder: (context) => ScanCameraScreen(
++            type: selectedPhotoIDType!,
++          ),
++        ),
++      );
++
++      setState(() {
++        _uploadedPhoto = File(results.filePath ?? '');
++        firstNameController.text = results.firstName ?? '';
++        lastNameController.text = results.lastName ?? '';
++        addressController.text = results.address ?? '';
++        dobController.text = results.dateOfBirth ?? '';
++        cardNumberController.text = results.cardNumber ?? '';
++        idController.text = results.licenseNumber ?? '';
++        expiryController.text = results.expiredDate ?? '';
++      });
++
++      if (results.filePath != null) {
++        await uploadFileDriver(_uploadedPhoto!.path, getPathProcess());
++      }
++    } catch (e) {
++      logger.e('Error capturing photo: $e');
++    }
++  }
++
++  String getPathProcess() {
++    if (selectedPhotoIDType == "Driver's License") {
++      return pathProcessDriverLicense;
++    } else if (selectedPhotoIDType == "Passport") {
++      return pathProcessPassport;
++    } else if (selectedPhotoIDType == "National ID") {
++      return pathProcessPhotoCard;
++    }
++    return '';
++  }
++
++  String getPathStorage() {
++    if (selectedPhotoIDType == "Driver's License") {
++      return pathStoreDriverLicense;
++    } else if (selectedPhotoIDType == "Passport") {
++      return pathStorePassport;
++    } else if (selectedPhotoIDType == "National ID") {
++      return pathStorePhotoCard;
++    }
++    return '';
++  }
++
++  Map<String, dynamic> getBody() {
++    if (selectedPhotoIDType == "Driver's License") {
++      return {
++        "email": widget.email,
++        "first_name": firstNameController.text,
++        "last_name": lastNameController.text,
++        "address": addressController.text,
++        "license_number": idController.text,
++        "card_number": cardNumberController.text,
++        "date_of_birth": dobController.text,
++        "expiry_date": expiryController.text,
++      };
++    } else if (selectedPhotoIDType == "Passport") {
++      return {
++        "email": widget.email,
++        "first_name": firstNameController.text,
++        "last_name": lastNameController.text,
++        "date_of_birth": dobController.text,
++        "document_number": idController.text,
++        "expiry_date": expiryController.text,
++        "gender": sexController.text,
++      };
++    } else if (selectedPhotoIDType == "National ID") {
++      return {
++        "email": widget.email,
++        "first_name": firstNameController.text,
++        "last_name": lastNameController.text,
++        "address": addressController.text,
++        "photo_card_number": idController.text,
++        "date_of_birth": dobController.text,
++        "card_number": cardNumberController.text,
++        "gender": sexController.text,
++        "expiry_date": expiryController.text,
++      };
++    }
++    return <String, dynamic>{};
++  }
++
++  // Method to show the full photo in a dialog
++  void _showFullPhotoDialog() {
++    if (_uploadedPhoto == null) return; // Ensure there is a photo to display
++
++    showDialog(
++      context: context,
++      builder: (context) {
++        return Dialog(
++          child: Column(
++            mainAxisSize: MainAxisSize.min,
++            children: [
++              Image.file(
++                _uploadedPhoto!,
++                fit: BoxFit.cover,
++              ),
++              TextButton(
++                onPressed: () => Navigator.pop(context), // Close the dialog
++                child: const Text(
++                  'Close',
++                  style: TextStyle(color: Colors.red),
++                ),
++              ),
++            ],
++          ),
++        );
++      },
++    );
++  }
++
++  Future<void> uploadFileDriver(String filePath, String urlApi) async {
++    final url = Uri.parse('$baseUri$urlApi');
++
++    try {
++      Navigator.push(
++        context,
++        MaterialPageRoute(
++          builder: (context) => const ProcessingPage(),
++        ),
++      );
++
++      // Tạo file từ đường dẫn
++      var file = File(filePath);
++
++      if (!await file.exists()) {
++        logger.e('File không tồn tại.');
++        return;
++      }
++
++      // Tạo yêu cầu multipart
++      var request = http.MultipartRequest('POST', url)
++        ..headers['Accept'] = 'application/json'
++        ..files.add(await http.MultipartFile.fromPath('file', file.path));
++
++      // Gửi yêu cầu
++      var response = await request.send();
++
++      // Đọc phần hồi
++      if (!mounted) return;
++      Navigator.pop(context);
++
++      // Kiểm tra phản hồi
++      if (response.statusCode == 200) {
++        var responseBody = await response.stream.bytesToString();
++        final data = jsonDecode(responseBody)['extracted_data'] ?? '';
++        logger.e('close data: $responseBody');
++        firstNameController.text =
++            data['first_name'] ?? firstNameController.text;
++        lastNameController.text = data['last_name'] ?? lastNameController.text;
++        addressController.text = data['address'] ?? addressController.text;
++        sexController.text = data['gender'] ?? sexController.text;
++        if (data['license_number'].toString().isNotEmpty) {
++          idController.text = data['license_number'];
++        }
++
++        setState(() {});
++      } else {
++        logger.e('Lỗi khi tải lên: ${response.statusCode}');
++      }
++    } catch (e) {
++      logger.e('Đã xảy ra lỗi: $e');
++    }
++  }
++
++  void checkReplaceDataEmpty(
++    TextEditingController controller,
++    String? data,
++  ) {
++    String textInField = controller.text;
++    if (textInField.isNotEmpty) {
++      controller.text = data ?? textInField;
++    }
++  }
++
++  Future<ScanModel> _detachTextFromFile(File imageFile) async {
++    final inputImage = InputImage.fromFile(imageFile);
++    final textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
++    final RecognizedText recognizedText =
++        await textRecognizer.processImage(inputImage);
++    final ScanModel model = ScanModel();
++
++    final rawText = recognizedText.text.toUpperCase();
++
++    if ((rawText.contains('DRIVER LICENCE') ||
++            rawText.contains('PASSPORT') ||
++            rawText.contains('NATIONAL')) &&
++        rawText.contains('LICENCE NO') &&
++        rawText.contains('DATE OF BIRTH')) {
++      final textSplit = rawText.split(RegExp(r'\r?\n'));
++
++      model.filePath = imageFile.path;
++      return await _detachDataLocal(model, textSplit);
++    }
++    return model;
++  }
++
++  Future<ScanModel> _detachDataLocal(
++    ScanModel model,
++    List<String> textSplit,
++  ) async {
++    final iDoB = textSplit.indexOf('DATE OF BIRTH') + 1;
++    model.dateOfBirth = textSplit[iDoB];
++
++    final iCardNumber = textSplit.indexOf('CARD NUMBER') + 1;
++    model.cardNumber = textSplit[iCardNumber];
++
++    final iExpiredDate = textSplit.indexOf('EXPIRY DATE') + 1;
++    model.expiredDate = textSplit[iExpiredDate];
++
++    /// Extract address
++    int count = 0;
++    String address = '';
++
++    for (var result in textSplit) {
++      if (result.isAddress()) {
++        count++;
++        address += '$result ';
++      }
++      if (count >= 2) {
++        break;
++      }
++    }
++    model.address = address;
++
++    /// Extract license no
++    String licenseNo = textSplit.firstWhere((result) {
++      if (int.tryParse(result) != null) {
++        return true;
++      }
++      return false;
++    });
++    final iLicenceNo = textSplit.indexOf('LICENCE NO') + 1;
++    if (iLicenceNo <= 0) {
++      model.licenseNumber = licenseNo;
++    } else {
++      model.licenseNumber = textSplit[iLicenceNo];
++    }
++
++    /// Extract name and last name
++    String name = textSplit.firstWhere((e) {
++      if (e.isName() &&
++          !e.contains('LICENCE') &&
++          !e.contains('PASSPORT') &&
++          !e.contains('NATIONAL') &&
++          !e.contains('DRIVING') &&
++          !e.contains('AUSTRALIAN')) {
++        return true;
++      }
++      return false;
++    });
++    final lastName = name.split(' ');
++    model.firstName = lastName.sublist(0, lastName.length - 1).join(' ');
++    model.lastName = lastName.last;
++    return model;
++  }
++
++  void _deletePhoto() {
++    // Delete the photo and update the state
++    setState(() {
++      _uploadedPhoto = null;
++    });
++    logger.e("Photo deleted");
++  }
++
++  Future<void> _handleSignOut() async {
++    final shouldLogout = await showDialog<bool>(
++      context: context,
++      builder: (context) => AlertDialog(
++        title: const Text('Confirm Logout'),
++        content: const Text('Are you sure you want to log out?'),
++        actions: [
++          TextButton(
++            onPressed: () => Navigator.of(context).pop(false),
++            child: const Text('Cancel'),
++          ),
++          TextButton(
++            onPressed: () => Navigator.of(context).pop(true),
++            child: const Text('Log out'),
++          ),
++        ],
++      ),
++    );
++
++    if (shouldLogout ?? false) {
++      // Clear form state
++      setState(() {
++        _uploadedPhoto = null;
++        selectedPhotoIDType = null;
++        idController.clear();
++        expiryController.clear();
++        cardNumberController.clear();
++        firstNameController.clear();
++        lastNameController.clear();
++        addressController.clear();
++        sexController.clear();
++        dobController.clear();
++      });
++
++      // Show success dialog
++      if (!mounted) return;
++      showDialog(
++        context: context,
++        builder: (context) => AlertDialog(
++          title: const Text('Logged out'),
++          content: const Text('You have been logged out successfully.'),
++          actions: [
++            TextButton(
++              onPressed: () => Navigator.of(context).pop(),
++              child: const Text('OK'),
++            ),
++          ],
++        ),
++      );
++
++      // Navigate to login screen
++      if (!mounted) return;
++      Navigator.of(context).pushAndRemoveUntil(
++        MaterialPageRoute(builder: (context) => const MyApp()),
++        (route) => false,
++      );
++    }
++  }
++
++  Future<void> deleteAccount(String email) async {
++    try {
++      final response =
++          await http.delete(Uri.parse('$deleteAccountUri?email=$email'),
++              // Replace with your actual delete account endpoint
++              headers: {'Content-Type': 'application/json'});
++
++      if (response.statusCode == 200) {
++        final data = jsonDecode(response.body);
++        final message = data['message'] ?? "Account deleted successfully.";
++        if (!mounted) return;
++        showDialog(
++          context: context,
++          builder: (context) => AlertDialog(
++            title: const Text("Account Deleted"),
++            content: Text(message),
++          ),
++        );
++
++        Future.delayed(const Duration(seconds: 2), () {
++          if (!mounted) return;
++          Navigator.of(context).pop(); // Close dialog
++          Navigator.of(context).pushAndRemoveUntil(
++            MaterialPageRoute(builder: (context) => const MyApp()),
++            (Route<dynamic> route) => false,
++          );
++        });
++      } else {
++        _showErrorDialog(
++          "Failed to delete account. Status: ${response.statusCode}",
++        );
++      }
++    } catch (error) {
++      _showErrorDialog("An error occurred: $error");
++    }
++  }
++
++  void _showErrorDialog(String message) {
++    showDialog(
++      context: context,
++      builder: (context) => AlertDialog(
++        title: const Text("Error"),
++        content: Text(message),
++        actions: [
++          TextButton(
++            onPressed: () => Navigator.of(context).pop(),
++            child: const Text("OK"),
++          ),
++        ],
++      ),
++    );
++  }
++
++  @override
++  initState() {
++    super.initState();
++    // Call the API to get the photo card
++    initData();
++  }
++
++  Future<void> initData() async {
++    // call api lấy data
++    final responsePhotoCar = await FetchApi.getInfoCard(widget.email);
++    final responsePassport = await FetchApi.getInfoPassport(widget.email);
++    final responseDriverLicense =
++        await FetchApi.getInfoDriverLicense(widget.email);
++
++    if (responsePhotoCar.isNotEmpty ||
++        responsePassport.isNotEmpty ||
++        responseDriverLicense.isNotEmpty) {
++      // check xem có dữ liệu hay không rồi chuyển trạng thái
++      setState(() {
++        isLoading = false;
++
++        // fill dữ liệu vào các trường
++        if (responsePhotoCar.isNotEmpty) {
++          final photoCard = responsePhotoCar.first;
++
++          idController.text = photoCard.cardNumber.toString();
++          expiryController.text = photoCard.expiryDate.toString().split(' ')[0];
++          cardNumberController.text = photoCard.photoCardNumber.toString();
++          firstNameController.text = photoCard.firstName.toString();
++          lastNameController.text = photoCard.lastName.toString();
++          addressController.text = photoCard.address.toString();
++          sexController.text = photoCard.toString();
++          dobController.text = photoCard.dateOfBirth.toString().split(' ')[0];
++          selectedPhotoIDType = 'National ID';
++        } else if (responsePassport.isNotEmpty) {
++          final passport = responsePassport.first;
++
++          idController.text = passport.documentNumber.toString();
++          expiryController.text = passport.expiryDate.toString().split(' ')[0];
++          cardNumberController.text = passport.documentNumber.toString();
++          firstNameController.text = passport.firstName.toString();
++          lastNameController.text = passport.lastName.toString();
++          sexController.text = passport.gender.toString();
++          dobController.text = passport.dateOfBirth.toString().split(' ')[0];
++          selectedPhotoIDType = 'Passport';
++        } else if (responseDriverLicense.isNotEmpty) {
++          final driverLicense = responseDriverLicense.first;
++
++          idController.text = driverLicense.cardNumber.toString();
++          expiryController.text =
++              driverLicense.expiryDate.toString().split(' ')[0];
++          cardNumberController.text = driverLicense.cardNumber.toString();
++          firstNameController.text = driverLicense.firstName.toString();
++          lastNameController.text = driverLicense.lastName.toString();
++          addressController.text = driverLicense.address.toString();
++          dobController.text =
++              driverLicense.dateOfBirth.toString().split(' ')[0];
++          selectedPhotoIDType = 'Driver\'s License';
++        }
++      });
++    } else {
++      setState(() {
++        isLoading = false;
++      });
++    }
++  }
++
++  @override
++  Widget build(BuildContext context) {
++    return Scaffold(
++      appBar: AppBar(
++        title: const Text(
++          'Collector Registration',
++          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
++        ),
++        actions: [
++          IconButton(
++            icon: const Icon(Icons.settings),
++            onPressed: _togglePanel,
++          ),
++        ],
++        backgroundColor: const Color(0xFF01B4D2),
++      ),
++      body: Stack(
++        children: [
++          // Main content with error check
++          isLoading
++              ? _buildCallApiError()
++              : SingleChildScrollView(
++                  child: Column(
++                    crossAxisAlignment: CrossAxisAlignment.start,
++                    children: [
++                      const SizedBox(height: 16),
++                      const StepIndicator(),
++                      const SizedBox(height: 16),
++                      const SectionTitle(title: '1. Collector Identity'),
++                      const SizedBox(height: 16),
++                      Padding(
++                        padding: const EdgeInsets.all(16.0),
++                        child: Form(
++                          key: _formKey,
++                          child: Column(
++                            crossAxisAlignment: CrossAxisAlignment.start,
++                            children: [
++                              const SectionHeader(title: 'PHOTO ID'),
++                              const SizedBox(height: 16),
++                              DropdownField(
++                                hint: 'Please select a type of Photo ID',
++                                items: const [
++                                  'Passport',
++                                  'Driver\'s License',
++                                  'National ID'
++                                ],
++                                value: selectedPhotoIDType,
++                                onChanged: (value) {
++                                  setState(() {
++                                    selectedPhotoIDType = value;
++                                  });
++                                },
++                              ),
++                              const SizedBox(height: 8),
++                              PhotoIdSection(
++                                uploadedPhoto: _uploadedPhoto,
++                                getPhotoFromGallery: _getPhotoFromGallery,
++                                takePhoto: _takePhoto,
++                                scanPhoto: _scanImage,
++                                watchPhoto: _showFullPhotoDialog,
++                                deletePhoto: _deletePhoto,
++                                isCheck: selectedPhotoIDType != null,
++                              ),
++                              CustomTextField(
++                                label: 'Photo ID Document Number',
++                                controller: idController,
++                              ),
++                              const SizedBox(height: 16),
++                              CustomTextField(
++                                label: 'Expiry Date',
++                                controller: expiryController,
++                              ),
++                              if (selectedPhotoIDType == "Driver's License" ||
++                                  selectedPhotoIDType == "National ID")
++                                CustomTextField(
++                                  label: 'Card Number',
++                                  controller: cardNumberController,
++                                ),
++                              const SizedBox(height: 16),
++                              const SectionHeader(title: 'PERSONAL DETAILS'),
++                              CustomTextField(
++                                label: 'First Name',
++                                controller: firstNameController,
++                              ),
++                              CustomTextField(
++                                label: 'Last Name',
++                                controller: lastNameController,
++                              ),
++                              if (selectedPhotoIDType == "Passport")
++                                CustomTextField(
++                                  label: 'Sex',
++                                  controller: sexController,
++                                ),
++                              CustomTextField(
++                                label: 'Date of Birth',
++                                controller: dobController,
++                              ),
++                              const SizedBox(height: 16),
++                              if (selectedPhotoIDType == "Driver's License" ||
++                                  selectedPhotoIDType == "National ID")
++                                const SectionHeader(title: 'ADDRESS'),
++                              if (selectedPhotoIDType == "Driver's License" ||
++                                  selectedPhotoIDType == "National ID")
++                                CustomTextField(
++                                  label: 'Address',
++                                  controller: addressController,
++                                ),
++                              const SizedBox(height: 16),
++                              ActionButtons(
++                                formKey: _formKey,
++                                path: getPathStorage(),
++                                body: getBody(),
++                              ),
++                            ],
++                          ),
++                        ),
++                      ),
++                    ],
++                  ),
++                ),
++
++          // Settings Panel
++          SlidingUpPanel(
++            controller: _panelController,
++            minHeight: 0,
++            maxHeight: 300,
++            panel: Container(
++              color: Theme.of(context).scaffoldBackgroundColor,
++              padding: const EdgeInsets.all(16.0),
++              child: Column(
++                crossAxisAlignment: CrossAxisAlignment.start,
++                children: [
++                  Text('Settings',
++                      style: Theme.of(context).textTheme.titleLarge),
++                  const Divider(),
++                  ListTile(
++                    leading: const Icon(Icons.dark_mode),
++                    title: const Text('Dark Mode'),
++                    onTap: () {
++                      final themeProvider = context.read<ThemeProvider>();
++                      themeProvider.toggleTheme(!themeProvider.isDarkMode);
++                      _panelController.close();
++                    },
++                  ),
++                  ListTile(
++                    leading: const Icon(Icons.exit_to_app),
++                    title: const Text('Sign Out'),
++                    onTap: () async {
++                      await _panelController.close();
++                      await _handleSignOut();
++                    },
++                  ),
++                  ListTile(
++                    leading: const Icon(Icons.delete),
++                    title: const Text('Delete Account'),
++                    onTap: () async {
++                      _panelController.close();
++
++                      final confirm = await showDialog<bool>(
++                        context: context,
++                        builder: (context) => AlertDialog(
++                          title: const Text("Confirm Deletion"),
++                          content: const Text(
++                              "Are you sure you want to delete your account? This action cannot be undone."),
++                          actions: [
++                            TextButton(
++                              onPressed: () => Navigator.of(context).pop(false),
++                              child: const Text("Cancel"),
++                            ),
++                            TextButton(
++                              onPressed: () => Navigator.of(context).pop(true),
++                              child: const Text("Delete",
++                                  style: TextStyle(color: Colors.red)),
++                            ),
++                          ],
++                        ),
++                      );
++
++                      if (confirm == true) {
++                        await deleteAccount(widget
++                            .email); // Make sure `userEmail` is available (from login/session)
++                      }
++                    },
++                  )
++                ],
++              ),
++            ),
++            onPanelOpened: () => setState(() => _isPanelOpen = true),
++            onPanelClosed: () => setState(() => _isPanelOpen = false),
++          ),
++        ],
++      ),
++    );
++  }
++
++  Widget _buildCallApiError() {
++    return const Center(child: CircularProgressIndicator());
++  }
++}
+Index: lib/collect_registration/processing_page.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/collect_registration/processing_page.dart b/lib/feature/view/collect_registration/processing_page.dart
+rename from lib/collect_registration/processing_page.dart
+rename to lib/feature/view/collect_registration/processing_page.dart
+--- a/lib/collect_registration/processing_page.dart	(revision 7612763ca273c3d10e019d952701b4b987c8649a)
++++ b/lib/feature/view/collect_registration/processing_page.dart	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
+@@ -7,8 +7,7 @@
+   State<ProcessingPage> createState() => _ProcessingPageState();
+ }
+ 
+-class _ProcessingPageState extends State<ProcessingPage>
+-    with TickerProviderStateMixin {
++class _ProcessingPageState extends State<ProcessingPage> with TickerProviderStateMixin {
+   late AnimationController _controller;
+   late Animation<double> _animation;
+ 
+@@ -109,4 +108,4 @@
+       ),
+     );
+   }
+-}
++}
+\ No newline at end of file
+Index: lib/collect_registration/scan_camera_screen.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/collect_registration/scan_camera_screen.dart b/lib/feature/view/collect_registration/scan_camera_screen.dart
+rename from lib/collect_registration/scan_camera_screen.dart
+rename to lib/feature/view/collect_registration/scan_camera_screen.dart
+--- a/lib/collect_registration/scan_camera_screen.dart	(revision 7612763ca273c3d10e019d952701b4b987c8649a)
++++ b/lib/feature/view/collect_registration/scan_camera_screen.dart	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
+@@ -3,11 +3,9 @@
+ import 'package:flutter/material.dart';
+ import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+ import 'package:permission_handler/permission_handler.dart';
++import 'package:scan_ml_text_kit/core/utils/consts.dart';
+ import 'package:scan_ml_text_kit/extension/string_ext.dart';
+-import 'package:scan_ml_text_kit/main.dart';
+-import 'package:scan_ml_text_kit/model/scan_model.dart';
+-import 'package:scan_ml_text_kit/utils/consts.dart';
+-import 'package:collection/collection.dart';
++import '../../../model/scan_model.dart';
+ 
+ class ScanCameraScreen extends StatefulWidget {
+   const ScanCameraScreen({
+@@ -68,9 +66,7 @@
+         final File imageFile = File(file.path);
+         await _scanText(imageFile);
+       });
+-    } catch (e) {
+-      logger.e("Take picture error: $e");
+-    }
++    } catch (e) {}
+   }
+ 
+   Future<void> _scanText(File imageFile) async {
+@@ -91,24 +87,28 @@
+ 
+       model.filePath = imageFile.path;
+       detachDataLocal(model, textSplit);
++      if (!mounted) return;
+       Navigator.pop(context, model);
+     }
+   }
+ 
+-  Future<void> detachDataLocal(ScanModel model, List<String> textSplit) async {
+-    final iLicenceNo = textSplit.indexOf('LICENCE NO') + 1;
++  Future<void> detachDataLocal(
++    ScanModel model,
++    List<String> textSplit,
++  ) async {
+     final iDoB = textSplit.indexOf('DATE OF BIRTH') + 1;
++    model.dateOfBirth = textSplit[iDoB];
++
++    final iCardNumber = textSplit.indexOf('CARD NUMBER') + 1;
++    model.cardNumber = textSplit[iCardNumber];
++
++    final iExpiredDate = textSplit.indexOf('EXPIRY DATE') + 1;
++    model.expiredDate = textSplit[iExpiredDate];
++
++    /// Extract address
+     int count = 0;
+     String address = '';
+-    String name = textSplit.firstWhere((e) {
+-      if (e.isName() &&
+-          !e.contains('LICENCE') &&
+-          !e.contains('DRIVING') &&
+-          !e.contains('AUSTRALIAN')) {
+-        return true;
+-      }
+-      return false;
+-    });
++
+     for (var result in textSplit) {
+       if (result.isAddress()) {
+         count++;
+@@ -118,23 +118,37 @@
+         break;
+       }
+     }
+-
+-    model.firstName = name;
+     model.address = address;
+-    final licenseNo = textSplit[iLicenceNo];
+-    final dob = textSplit[iDoB];
+ 
+-    if (dob.isDate()) {
+-      model.dateOfBirth = dob;
+-    } else {
+-      model.dateOfBirth = textSplit.firstWhereOrNull((e) => e.isDate());
+-    }
+-
+-    if (int.tryParse(licenseNo) != null) {
++    /// Extract license no
++    String licenseNo = textSplit.firstWhere((result) {
++      if (int.tryParse(result) != null) {
++        return true;
++      }
++      return false;
++    });
++    final iLicenceNo = textSplit.indexOf('LICENCE NO') + 1;
++    if (iLicenceNo <= 0) {
+       model.licenseNumber = licenseNo;
+     } else {
+-      model.licenseNumber = textSplit.firstWhereOrNull((e) => e.isNumber());
++      model.licenseNumber = textSplit[iLicenceNo];
+     }
++
++    /// Extract name and last name
++    String name = textSplit.firstWhere((e) {
++      if (e.isName() &&
++          !e.contains('LICENCE') &&
++          !e.contains('PASSPORT') &&
++          !e.contains('NATIONAL') &&
++          !e.contains('DRIVING') &&
++          !e.contains('AUSTRALIAN')) {
++        return true;
++      }
++      return false;
++    });
++    final lastName = name.split(' ');
++    model.firstName = lastName.sublist(0, lastName.length - 1).join(' ');
++    model.lastName = lastName.last;
+   }
+ 
+   String get endPoint {
+Index: lib/login/login_page.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/login/login_page.dart b/lib/feature/view/login/login_page.dart
+rename from lib/login/login_page.dart
+rename to lib/feature/view/login/login_page.dart
+--- a/lib/login/login_page.dart	(revision 7612763ca273c3d10e019d952701b4b987c8649a)
++++ b/lib/feature/view/login/login_page.dart	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
+@@ -1,13 +1,13 @@
++import 'dart:async';
+ import 'dart:convert';
+ import 'package:email_validator/email_validator.dart';
+ import 'package:flutter/material.dart';
+-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+ import 'package:gap/gap.dart';
+ import 'package:google_fonts/google_fonts.dart';
+ import 'package:http/http.dart' as http;
+-import 'package:scan_ml_text_kit/collect_registration/collect_registration.dart';
+-import 'package:scan_ml_text_kit/utils/consts.dart';
+-import '../gen/assets.gen.dart';
++import 'package:scan_ml_text_kit/core/utils/consts.dart';
++import 'package:scan_ml_text_kit/feature/view/collect_registration/collect_registration.dart';
++import '../../../gen/assets.gen.dart';
+ import '../register/register_page.dart';
+ 
+ class LoginPage extends StatefulWidget {
+@@ -22,13 +22,11 @@
+   final TextEditingController _password = TextEditingController();
+   final _formKey = GlobalKey<FormState>();
+ 
+-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+-
+   bool _isPasswordVisible = false;
+ 
+-  Future<void> _login() async {
++  Future<bool?> _login() async {
+     if (_formKey.currentState?.validate() != true) {
+-      return;
++      return null;
+     }
+ 
+     try {
+@@ -48,27 +46,9 @@
+         final String? token = data['access_token'];
+ 
+         if (token != null) {
+-          // Print the access token to the console
+           print("Access Token: $token");
+ 
+-          // Navigate to CollectRegistration on success
+-          showDialog(
+-            context: context,
+-            builder: (context) => const AlertDialog(
+-              title: Text("Success!"),
+-              content: Text("Log In Successful!"),
+-            ),
+-          );
+-
+-          Future.delayed(const Duration(seconds: 2), () {
+-            if (!mounted) return;
+-            Navigator.of(context).pop(); // Dismiss the dialog
+-            Navigator.of(context).pushReplacement(MaterialPageRoute(
+-              builder: (context) => CollectRegistration(
+-                email: _email.text,
+-              ),
+-            ));
+-          });
++          return true;
+         } else {
+           _showErrorDialog("Failed to retrieve token.");
+         }
+@@ -81,6 +61,7 @@
+     } catch (error) {
+       _showErrorDialog("An error occurred: $error");
+     }
++    return null;
+   }
+ 
+   void _showErrorDialog(String message) {
+@@ -154,7 +135,7 @@
+                             ),
+                             decoration: const InputDecoration(
+                               prefixIcon:
+-                                  Icon(Icons.email, color: Color(0xFF1A1448)),
++                              Icon(Icons.email, color: Color(0xFF1A1448)),
+                               labelText: 'Email',
+                               labelStyle: TextStyle(
+                                 color: Color(0xFF1A1448),
+@@ -227,7 +208,7 @@
+                             ),
+                             validator: (text) {
+                               if (text?.isNotEmpty == true &&
+-                                  text!.length > 6) {
++                                  text!.length > 4) {
+                                 return null;
+                               } else {
+                                 return 'Invalid Password!';
+@@ -262,7 +243,32 @@
+                           ),
+                           const Gap(7),
+                           ElevatedButton(
+-                            onPressed: _login,
++                            onPressed: () async {
++                              final response = await _login();
++                              if (response == true) {
++                                showDialog(
++                                    context: context,
++                                    builder: (context) {
++                                      return const AlertDialog(
++                                        title: Text("Success!"),
++                                        content: Text("Log In Successful!"),
++                                      );
++                                    });
++                                Timer(
++                                  Duration(seconds: 2),
++                                      () {
++                                    Navigator.pop(context);
++                                    Navigator.of(context).pushAndRemoveUntil(
++                                      MaterialPageRoute(
++                                          builder: (context) =>
++                                              CollectRegistration(
++                                                  email: _email.text)),
++                                          (Route<dynamic> route) => false,
++                                    );
++                                  },
++                                );
++                              }
++                            },
+                             style: ElevatedButton.styleFrom(
+                               textStyle: const TextStyle(fontSize: 20),
+                               backgroundColor: const Color(0xFF1A1448),
+@@ -292,12 +298,12 @@
+                                 onPressed: () {
+                                   Navigator.of(context).push(MaterialPageRoute(
+                                       builder: (context) =>
+-                                          const RegisterPage()));
++                                      const RegisterPage()));
+                                 },
+                                 style: TextButton.styleFrom(
+                                   padding: EdgeInsets.zero,
+                                   tapTargetSize:
+-                                      MaterialTapTargetSize.shrinkWrap,
++                                  MaterialTapTargetSize.shrinkWrap,
+                                 ),
+                                 child: const Text(
+                                   "Register",
+@@ -322,4 +328,4 @@
+       ),
+     );
+   }
+-}
++}
+\ No newline at end of file
+Index: lib/register/register_page.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/register/register_page.dart b/lib/feature/view/register/register_page.dart
+rename from lib/register/register_page.dart
+rename to lib/feature/view/register/register_page.dart
+--- a/lib/register/register_page.dart	(revision 7612763ca273c3d10e019d952701b4b987c8649a)
++++ b/lib/feature/view/register/register_page.dart	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
+@@ -3,9 +3,9 @@
+ import 'package:gap/gap.dart';
+ import 'package:email_validator/email_validator.dart';
+ import 'package:http/http.dart' as http;
+-import 'package:scan_ml_text_kit/utils/consts.dart';
++import 'package:scan_ml_text_kit/core/utils/consts.dart';
+ 
+-import '../gen/assets.gen.dart';
++import '../../../gen/assets.gen.dart';
+ 
+ class RegisterPage extends StatefulWidget {
+   const RegisterPage({super.key});
+@@ -77,9 +77,9 @@
+     } catch (e) {
+       showDialog(
+         context: context,
+-        builder: (context) => const AlertDialog(
+-          title: Text("Error!"),
+-          content: Text("Failed to connect to the server. Please try again."),
++        builder: (context) => AlertDialog(
++          title: const Text("Error!"),
++          content: const Text("Failed to connect to the server. Please try again."),
+         ),
+       );
+     }
+@@ -198,7 +198,7 @@
+                               ),
+                             ),
+                             validator: (text) {
+-                              if (text?.isNotEmpty == true && text!.length > 6) {
++                              if (text?.isNotEmpty == true && text!.length > 4) {
+                                 return null;
+                               } else {
+                                 return 'Invalid Password!';
+Index: lib/main.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/main.dart b/lib/main.dart
+--- a/lib/main.dart	(revision 7612763ca273c3d10e019d952701b4b987c8649a)
++++ b/lib/main.dart	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
+@@ -1,7 +1,8 @@
+ import 'package:flutter/material.dart';
+ import 'package:logger/logger.dart';
+-import 'package:scan_ml_text_kit/collect_registration/collect_registration.dart';
+-import 'package:scan_ml_text_kit/login/login_page.dart';
++import 'package:provider/provider.dart';
++import 'package:scan_ml_text_kit/feature/controller/theme_provider.dart';
++import 'package:scan_ml_text_kit/feature/view/login/login_page.dart';
+ 
+ var logger = Logger(
+   printer: PrettyPrinter(),
+@@ -12,7 +13,12 @@
+ void main() async {
+   WidgetsFlutterBinding.ensureInitialized();
+ 
+-  runApp(const MyApp());
++  runApp(
++    ChangeNotifierProvider(
++      create: (_) => ThemeProvider(),
++      child: const MyApp(),
++    ),
++  );
+ }
+ 
+ class MyApp extends StatelessWidget {
+@@ -20,13 +26,27 @@
+ 
+   @override
+   Widget build(BuildContext context) {
++    final themeProvider = Provider.of<ThemeProvider>(context);
++
+     return MaterialApp(
++      debugShowCheckedModeBanner: false,
+       title: 'Collect Assist Demo',
++      themeMode: themeProvider.themeMode,
+       theme: ThemeData(
+-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
++        colorScheme: ColorScheme.fromSeed(
++          seedColor: Colors.blue,
++          brightness: Brightness.light,
++        ),
+         useMaterial3: true,
+       ),
+-      home: const CollectRegistration(email: 'email'),
++      darkTheme: ThemeData(
++        colorScheme: ColorScheme.fromSeed(
++          seedColor: Colors.blueGrey,
++          brightness: Brightness.dark,
++        ),
++        useMaterial3: true,
++      ),
++      home: const LoginPage(),
+     );
+   }
+ }
+Index: lib/model/driver_license.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/model/driver_license.dart b/lib/model/driver_license.dart
+new file mode 100644
+--- /dev/null	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
++++ b/lib/model/driver_license.dart	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
+@@ -0,0 +1,57 @@
++// To parse this JSON data, do
++//
++//     final driverLicense = driverLicenseFromJson(jsonString);
++
++import 'dart:convert';
++
++DriverLicense driverLicenseFromJson(String str) => DriverLicense.fromJson(json.decode(str));
++
++String driverLicenseToJson(DriverLicense data) => json.encode(data.toJson());
++
++class DriverLicense {
++  int? id;
++  String? firstName;
++  String? lastName;
++  String? licenseNumber;
++  DateTime? expiryDate;
++  String? address;
++  String? cardNumber;
++  DateTime? dateOfBirth;
++  String? email;
++
++  DriverLicense({
++    this.id,
++    this.firstName,
++    this.lastName,
++    this.licenseNumber,
++    this.expiryDate,
++    this.address,
++    this.cardNumber,
++    this.dateOfBirth,
++    this.email,
++  });
++
++  factory DriverLicense.fromJson(Map<String, dynamic> json) => DriverLicense(
++    id: json["id"],
++    firstName: json["first_name"],
++    lastName: json["last_name"],
++    licenseNumber: json["license_number"],
++    expiryDate: json["expiry_date"] == null ? null : DateTime.parse(json["expiry_date"]),
++    address: json["address"],
++    cardNumber: json["card_number"],
++    dateOfBirth: json["date_of_birth"] == null ? null : DateTime.parse(json["date_of_birth"]),
++    email: json["email"],
++  );
++
++  Map<String, dynamic> toJson() => {
++    "id": id,
++    "first_name": firstName,
++    "last_name": lastName,
++    "license_number": licenseNumber,
++    "expiry_date": "${expiryDate!.year.toString().padLeft(4, '0')}-${expiryDate!.month.toString().padLeft(2, '0')}-${expiryDate!.day.toString().padLeft(2, '0')}",
++    "address": address,
++    "card_number": cardNumber,
++    "date_of_birth": "${dateOfBirth!.year.toString().padLeft(4, '0')}-${dateOfBirth!.month.toString().padLeft(2, '0')}-${dateOfBirth!.day.toString().padLeft(2, '0')}",
++    "email": email,
++  };
++}
+\ No newline at end of file
+Index: lib/model/passport.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/model/passport.dart b/lib/model/passport.dart
+new file mode 100644
+--- /dev/null	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
++++ b/lib/model/passport.dart	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
+@@ -0,0 +1,53 @@
++// To parse this JSON data, do
++//
++//     final passport = passportFromJson(jsonString);
++
++import 'dart:convert';
++
++Passport passportFromJson(String str) => Passport.fromJson(json.decode(str));
++
++String passportToJson(Passport data) => json.encode(data.toJson());
++
++class Passport {
++  String? lastName;
++  DateTime? dateOfBirth;
++  int? id;
++  String? firstName;
++  DateTime? expiryDate;
++  String? email;
++  String? documentNumber;
++  String? gender;
++
++  Passport({
++    this.lastName,
++    this.dateOfBirth,
++    this.id,
++    this.firstName,
++    this.expiryDate,
++    this.email,
++    this.documentNumber,
++    this.gender,
++  });
++
++  factory Passport.fromJson(Map<String, dynamic> json) => Passport(
++    lastName: json["last_name"],
++    dateOfBirth: json["date_of_birth"] == null ? null : DateTime.parse(json["date_of_birth"]),
++    id: json["id"],
++    firstName: json["first_name"],
++    expiryDate: json["expiry_date"] == null ? null : DateTime.parse(json["expiry_date"]),
++    email: json["email"],
++    documentNumber: json["document_number"],
++    gender: json["gender"],
++  );
++
++  Map<String, dynamic> toJson() => {
++    "last_name": lastName,
++    "date_of_birth": "${dateOfBirth!.year.toString().padLeft(4, '0')}-${dateOfBirth!.month.toString().padLeft(2, '0')}-${dateOfBirth!.day.toString().padLeft(2, '0')}",
++    "id": id,
++    "first_name": firstName,
++    "expiry_date": "${expiryDate!.year.toString().padLeft(4, '0')}-${expiryDate!.month.toString().padLeft(2, '0')}-${expiryDate!.day.toString().padLeft(2, '0')}",
++    "email": email,
++    "document_number": documentNumber,
++    "gender": gender,
++  };
++}
+\ No newline at end of file
+Index: lib/model/photo_card.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/model/photo_card.dart b/lib/model/photo_card.dart
+new file mode 100644
+--- /dev/null	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
++++ b/lib/model/photo_card.dart	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
+@@ -0,0 +1,67 @@
++// ignore_for_file: public_member_api_docs, sort_constructors_first
++// To parse this JSON data, do
++//
++//     final card = cardFromJson(jsonString);
++
++import 'dart:convert';
++
++PhotoCard cardFromJson(String str) => PhotoCard.fromJson(json.decode(str));
++
++String cardToJson(PhotoCard data) => json.encode(data.toJson());
++
++class PhotoCard {
++  int? id;
++  String? firstName;
++  String? address;
++  DateTime? dateOfBirth;
++  String? cardNumber;
++  DateTime? expiryDate;
++  String? lastName;
++  String? photoCardNumber;
++  String? gender;
++  String? email;
++
++  PhotoCard({
++    this.id,
++    this.firstName,
++    this.address,
++    this.dateOfBirth,
++    this.cardNumber,
++    this.expiryDate,
++    this.lastName,
++    this.photoCardNumber,
++    this.gender,
++    this.email,
++  });
++
++  factory PhotoCard.fromJson(Map<String, dynamic> json) => PhotoCard(
++    id: json["id"],
++    firstName: json["first_name"],
++    address: json["address"],
++    dateOfBirth: json["date_of_birth"] == null ? null : DateTime.parse(json["date_of_birth"]),
++    cardNumber: json["card_number"],
++    expiryDate: json["expiry_date"] == null ? null : DateTime.parse(json["expiry_date"]),
++    lastName: json["last_name"],
++    photoCardNumber: json["photo_card_number"],
++    gender: json["gender"],
++    email: json["email"],
++  );
++
++  Map<String, dynamic> toJson() => {
++    "id": id,
++    "first_name": firstName,
++    "address": address,
++    "date_of_birth": "${dateOfBirth!.year.toString().padLeft(4, '0')}-${dateOfBirth!.month.toString().padLeft(2, '0')}-${dateOfBirth!.day.toString().padLeft(2, '0')}",
++    "card_number": cardNumber,
++    "expiry_date": "${expiryDate!.year.toString().padLeft(4, '0')}-${expiryDate!.month.toString().padLeft(2, '0')}-${expiryDate!.day.toString().padLeft(2, '0')}",
++    "last_name": lastName,
++    "photo_card_number": photoCardNumber,
++    "gender": gender,
++    "email": email,
++  };
++
++  @override
++  String toString() {
++    return 'Card(id: $id, firstName: $firstName, address: $address, dateOfBirth: $dateOfBirth, cardNumber: $cardNumber, expiryDate: $expiryDate, lastName: $lastName, photoCardNumber: $photoCardNumber, gender: $gender, email: $email)';
++  }
++}
+\ No newline at end of file
+Index: lib/model/scan_model.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/model/scan_model.dart b/lib/model/scan_model.dart
+--- a/lib/model/scan_model.dart	(revision 7612763ca273c3d10e019d952701b4b987c8649a)
++++ b/lib/model/scan_model.dart	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
+@@ -25,4 +25,4 @@
+   String toString() {
+     return 'ScanModel{firstName: $firstName, lastName: $lastName, address: $address, cardNumber: $cardNumber, dateOfBirth: $dateOfBirth, expiredDate: $expiredDate, gender: $gender, licenseNumber: $licenseNumber}';
+   }
+-}
++}
+\ No newline at end of file
+Index: pubspec.lock
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/pubspec.lock b/pubspec.lock
+--- a/pubspec.lock	(revision 7612763ca273c3d10e019d952701b4b987c8649a)
++++ b/pubspec.lock	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
+@@ -331,6 +331,14 @@
+     description: flutter
+     source: sdk
+     version: "0.0.0"
++  flutter_dotenv:
++    dependency: "direct main"
++    description:
++      name: flutter_dotenv
++      sha256: b7c7be5cd9f6ef7a78429cabd2774d3c4af50e79cb2b7593e3d5d763ef95c61b
++      url: "https://pub.dev"
++    source: hosted
++    version: "5.2.1"
+   flutter_gen_core:
+     dependency: transitive
+     description:
+@@ -717,6 +725,14 @@
+       url: "https://pub.dev"
+     source: hosted
+     version: "2.0.0"
++  nested:
++    dependency: transitive
++    description:
++      name: nested
++      sha256: "03bac4c528c64c95c722ec99280375a6f2fc708eec17c7b3f07253b626cd2a20"
++      url: "https://pub.dev"
++    source: hosted
++    version: "1.0.0"
+   package_config:
+     dependency: transitive
+     description:
+@@ -877,6 +893,14 @@
+       url: "https://pub.dev"
+     source: hosted
+     version: "6.0.1"
++  provider:
++    dependency: "direct main"
++    description:
++      name: provider
++      sha256: "4abbd070a04e9ddc287673bf5a030c7ca8b685ff70218720abab8b092f53dd84"
++      url: "https://pub.dev"
++    source: hosted
++    version: "6.1.5"
+   pub_semver:
+     dependency: transitive
+     description:
+@@ -914,6 +938,14 @@
+     description: flutter
+     source: sdk
+     version: "0.0.99"
++  sliding_up_panel:
++    dependency: "direct main"
++    description:
++      name: sliding_up_panel
++      sha256: "578e90956a6212d1e406373250b2436a0f3afece29aee3c24c8360094d6cf968"
++      url: "https://pub.dev"
++    source: hosted
++    version: "2.0.0+1"
+   source_span:
+     dependency: transitive
+     description:
+Index: pubspec.yaml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/pubspec.yaml b/pubspec.yaml
+--- a/pubspec.yaml	(revision 7612763ca273c3d10e019d952701b4b987c8649a)
++++ b/pubspec.yaml	(revision 8c3d53425f28facc25e9114c6178c103279f65e2)
+@@ -26,6 +26,9 @@
+   google_fonts: ^6.2.1
+   gap: ^3.0.1
+   email_validator: ^3.0.0
++  provider: ^6.1.1
++  sliding_up_panel: ^2.0.0+1
++  flutter_dotenv: ^5.1.0
+ 
+ dev_dependencies:
+   flutter_test:
+Index: lib/collect_registration/collect_registration.dart
+===================================================================
+diff --git a/lib/collect_registration/collect_registration.dart b/lib/collect_registration/collect_registration.dart
+deleted file mode 100644
+--- a/lib/collect_registration/collect_registration.dart	(revision 7612763ca273c3d10e019d952701b4b987c8649a)
++++ /dev/null	(revision 7612763ca273c3d10e019d952701b4b987c8649a)
+@@ -1,506 +0,0 @@
+-import 'dart:convert';
+-import 'dart:io';
+-import 'package:collection/collection.dart';
+-import 'package:flutter/material.dart';
+-import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+-import 'package:image_cropper/image_cropper.dart';
+-import 'package:image_picker/image_picker.dart';
+-import 'package:scan_ml_text_kit/collect_registration/processing_page.dart';
+-import 'package:scan_ml_text_kit/collect_registration/scan_camera_screen.dart';
+-import 'package:scan_ml_text_kit/extension/string_ext.dart';
+-import 'package:scan_ml_text_kit/main.dart';
+-import 'package:scan_ml_text_kit/model/scan_model.dart';
+-import 'package:scan_ml_text_kit/utils/consts.dart';
+-import 'widgets/step_indicator.dart';
+-import 'widgets/section_title.dart';
+-import 'widgets/photo_id_section.dart';
+-import 'widgets/dropdown_field.dart';
+-import 'widgets/custom_text_field.dart';
+-import 'widgets/action_buttons.dart';
+-import 'widgets/section_header.dart';
+-import 'package:http/http.dart' as http;
+-
+-class CollectRegistration extends StatefulWidget {
+-  const CollectRegistration({super.key, required this.email});
+-
+-  final String email;
+-
+-  @override
+-  State<CollectRegistration> createState() => _CollectRegistrationScreenState();
+-}
+-
+-class _CollectRegistrationScreenState extends State<CollectRegistration> {
+-  final _formKey = GlobalKey<FormState>();
+-  String? selectedPhotoIDType;
+-  final ImagePicker _imagePicker = ImagePicker();
+-  File? _uploadedPhoto;
+-  bool isLoading = false;
+-
+-  final idController = TextEditingController();
+-  final nationalController = TextEditingController();
+-  final expiryController = TextEditingController();
+-  final cardNumberController = TextEditingController();
+-  final firstNameController = TextEditingController();
+-  final lastNameController = TextEditingController();
+-  final addressController = TextEditingController();
+-  final sexController = TextEditingController();
+-  final dobController = TextEditingController();
+-  final mobileNumberController = TextEditingController();
+-  final phoneNumberController = TextEditingController();
+-
+-  // Method to get a photo from the gallery
+-  Future<void> _getPhotoFromGallery() async {
+-    try {
+-      final XFile? pickedFile =
+-          await _imagePicker.pickImage(source: ImageSource.gallery);
+-      if (pickedFile != null) {
+-        _uploadedPhoto = File(pickedFile.path);
+-        if (_uploadedPhoto != null) {
+-          final model = await _detachTextFromFile(_uploadedPhoto!);
+-
+-          setState(() {
+-            firstNameController.text = model.firstName ?? '';
+-            addressController.text = model.address ?? '';
+-            dobController.text = model.dateOfBirth ?? '';
+-            cardNumberController.text = model.licenseNumber ?? '';
+-          });
+-        }
+-
+-        await uploadFileDriver(_uploadedPhoto!.path, getPathProcess());
+-      }
+-      setState(() {});
+-    } catch (e) {
+-      logger.e('Error selecting photo: $e');
+-    }
+-  }
+-
+-  Future<XFile?> pickAndCropImage() async {
+-    final XFile? pickedFile =
+-        await _imagePicker.pickImage(source: ImageSource.camera);
+-
+-    if (pickedFile != null) {
+-      CroppedFile? croppedFile = await ImageCropper().cropImage(
+-        sourcePath: pickedFile.path,
+-        uiSettings: [
+-          AndroidUiSettings(
+-            toolbarTitle: 'Crop image',
+-            lockAspectRatio: false, // Giữ nguyên tỷ lệ đã đặt
+-          ),
+-          IOSUiSettings(
+-            aspectRatioLockEnabled: false, // Khóa tỷ lệ
+-          ),
+-        ],
+-      );
+-
+-      if (croppedFile != null) {
+-        return XFile(croppedFile.path);
+-      }
+-    }
+-
+-    return null;
+-  }
+-
+-  //Method to take a photo using the camera
+-  Future<void> _takePhoto() async {
+-    try {
+-      final XFile? pickedFile = await pickAndCropImage();
+-      if (pickedFile != null) {
+-        _uploadedPhoto = File(pickedFile.path);
+-        if (_uploadedPhoto != null) {
+-          final model = await _detachTextFromFile(_uploadedPhoto!);
+-
+-          setState(() {
+-            firstNameController.text = model.firstName ?? '';
+-            addressController.text = model.address ?? '';
+-            dobController.text = model.dateOfBirth ?? '';
+-            cardNumberController.text = model.licenseNumber ?? '';
+-          });
+-        }
+-
+-        await uploadFileDriver(_uploadedPhoto!.path, getPathProcess());
+-      }
+-      setState(() {});
+-    } catch (e) {
+-      logger.e('Error capturing photo: $e');
+-    }
+-  }
+-
+-  //Method to take a photo using the camera
+-  Future<void> _scanImage() async {
+-    try {
+-      final ScanModel results = await Navigator.push(
+-        context,
+-        MaterialPageRoute(
+-          builder: (context) => ScanCameraScreen(
+-            type: selectedPhotoIDType!,
+-          ),
+-        ),
+-      );
+-
+-      setState(() {
+-        _uploadedPhoto = File(results.filePath ?? '');
+-        firstNameController.text = results.firstName ?? '';
+-        addressController.text = results.address ?? '';
+-        dobController.text = results.dateOfBirth ?? '';
+-        cardNumberController.text = results.licenseNumber ?? '';
+-      });
+-
+-      if (results.filePath != null) {
+-        await uploadFileDriver(_uploadedPhoto!.path, getPathProcess());
+-      }
+-    } catch (e) {
+-      logger.e('Error capturing photo: $e');
+-    }
+-  }
+-
+-  String getPathProcess() {
+-    if (selectedPhotoIDType == "Driver's License") {
+-      return pathProcessDriverLicense;
+-    } else if (selectedPhotoIDType == "Passport") {
+-      return pathProcessPassport;
+-    } else if (selectedPhotoIDType == "National ID") {
+-      return pathProcessPhotoCard;
+-    }
+-    return '';
+-  }
+-
+-  String getPathStorage() {
+-    if (selectedPhotoIDType == "Driver's License") {
+-      return pathStoreDriverLicense;
+-    } else if (selectedPhotoIDType == "Passport") {
+-      return pathStorePassport;
+-    } else if (selectedPhotoIDType == "National ID") {
+-      return pathStorePhotoCard;
+-    }
+-    return '';
+-  }
+-
+-  Map<String, dynamic> getBody() {
+-    if (selectedPhotoIDType == "Driver's License") {
+-      return {
+-        "email": widget.email,
+-        "first_name": firstNameController.text,
+-        "last_name": lastNameController.text,
+-        "address": addressController.text,
+-        "license_number": idController.text,
+-        "card_number": cardNumberController.text,
+-        "date_of_birth": dobController.text,
+-        "expiry_date": expiryController.text,
+-      };
+-    } else if (selectedPhotoIDType == "Passport") {
+-      return {
+-        "email": widget.email,
+-        "first_name": firstNameController.text,
+-        "last_name": lastNameController.text,
+-        "date_of_birth": dobController.text,
+-        "document_number": idController.text,
+-        "expiry_date": expiryController.text,
+-        "gender": sexController.text,
+-      };
+-    } else if (selectedPhotoIDType == "National ID") {
+-      return {
+-        "email": widget.email,
+-        "first_name": firstNameController.text,
+-        "last_name": lastNameController.text,
+-        "address": addressController.text,
+-        "photo_card_number": idController.text,
+-        "date_of_birth": dobController.text,
+-        "card_number": cardNumberController.text,
+-        "gender": sexController.text,
+-        "expiry_date": expiryController.text,
+-      };
+-    }
+-    return <String, dynamic>{};
+-  }
+-
+-  // Method to show the full photo in a dialog
+-  void _showFullPhotoDialog() {
+-    if (_uploadedPhoto == null) return; // Ensure there is a photo to display
+-
+-    showDialog(
+-      context: context,
+-      builder: (context) {
+-        return Dialog(
+-          child: Column(
+-            mainAxisSize: MainAxisSize.min,
+-            children: [
+-              Image.file(
+-                _uploadedPhoto!,
+-                fit: BoxFit.cover,
+-              ),
+-              TextButton(
+-                onPressed: () => Navigator.pop(context), // Close the dialog
+-                child: const Text(
+-                  'Close',
+-                  style: TextStyle(color: Colors.red),
+-                ),
+-              ),
+-            ],
+-          ),
+-        );
+-      },
+-    );
+-  }
+-
+-  Future<void> uploadFileDriver(String filePath, String urlApi) async {
+-    final url = Uri.parse('$baseUri$urlApi');
+-
+-    try {
+-      Navigator.push(
+-        context,
+-        MaterialPageRoute(
+-          builder: (context) => const ProcessingPage(),
+-        ),
+-      );
+-
+-      // Tạo file từ đường dẫn
+-      var file = File(filePath);
+-
+-      if (!await file.exists()) {
+-        logger.e('File không tồn tại.');
+-        return;
+-      }
+-
+-      // Tạo yêu cầu multipart
+-      var request = http.MultipartRequest('POST', url)
+-        ..headers['Accept'] = 'application/json'
+-        ..files.add(await http.MultipartFile.fromPath('file', file.path));
+-
+-      // Gửi yêu cầu
+-      var response = await request.send();
+-
+-      // Đọc phần hồi
+-      if (!mounted) return;
+-      Navigator.pop(context);
+-
+-      // Kiểm tra phản hồi
+-      if (response.statusCode == 200) {
+-        var responseBody = await response.stream.bytesToString();
+-        final data = jsonDecode(responseBody)['extracted_data'] ?? '';
+-        firstNameController.text = data['first_name'] ?? '';
+-        lastNameController.text = data['last_name'] ?? '';
+-        addressController.text = data['address'] ?? '';
+-        cardNumberController.text = data['card_number'] ?? '';
+-        dobController.text = data['date_of_birth'] ?? '';
+-        expiryController.text = data['expiry_date'] ?? '';
+-        sexController.text = data['gender'] ?? '';
+-        idController.text =
+-            data['photo_card_number'] ?? data['license_number'] ?? '';
+-
+-        setState(() {});
+-      } else {
+-        logger.e('Lỗi khi tải lên: ${response.statusCode}');
+-      }
+-    } catch (e) {
+-      logger.e('Đã xảy ra lỗi: $e');
+-      if (!mounted) return;
+-      Navigator.pop(context);
+-    }
+-  }
+-
+-  Future<ScanModel> _detachTextFromFile(File imageFile) async {
+-    final inputImage = InputImage.fromFile(imageFile);
+-    final textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
+-    final RecognizedText recognizedText =
+-        await textRecognizer.processImage(inputImage);
+-    final ScanModel model = ScanModel();
+-
+-    final rawText = recognizedText.text.toUpperCase();
+-
+-    if ((rawText.contains('DRIVER LICENCE') ||
+-            rawText.contains('PASSPORT') ||
+-            rawText.contains('NATIONAL')) &&
+-        rawText.contains('LICENCE NO') &&
+-        rawText.contains('DATE OF BIRTH')) {
+-      final textSplit = rawText.split(RegExp(r'\r?\n'));
+-
+-      model.filePath = imageFile.path;
+-      return await _detachDataLocal(model, textSplit);
+-    }
+-    return model;
+-  }
+-
+-  Future<ScanModel> _detachDataLocal(
+-    ScanModel model,
+-    List<String> textSplit,
+-  ) async {
+-    final iLicenceNo = textSplit.indexOf('LICENCE NO') + 1;
+-    final iDoB = textSplit.indexOf('DATE OF BIRTH') + 1;
+-    int count = 0;
+-    String address = '';
+-    String name = textSplit.firstWhere((e) {
+-      if (e.isName() &&
+-          !e.contains('LICENCE') &&
+-          !e.contains('PASSPORT') &&
+-          !e.contains('NATIONAL') &&
+-          !e.contains('DRIVING') &&
+-          !e.contains('AUSTRALIAN')) {
+-        return true;
+-      }
+-      return false;
+-    });
+-    for (var result in textSplit) {
+-      if (result.isAddress()) {
+-        count++;
+-        address += '$result ';
+-      }
+-      if (count >= 2) {
+-        break;
+-      }
+-    }
+-
+-    final licenseNo = textSplit[iLicenceNo];
+-    final dob = textSplit[iDoB];
+-
+-    model.firstName = name;
+-    model.address = address;
+-
+-    if (dob.isDate()) {
+-      model.dateOfBirth = dob;
+-    } else {
+-      model.dateOfBirth = textSplit.firstWhereOrNull((e) => e.isDate()) ?? '';
+-    }
+-
+-    if (int.tryParse(licenseNo) != null) {
+-      model.licenseNumber = licenseNo;
+-    } else {
+-      model.licenseNumber =
+-          textSplit.firstWhereOrNull((e) => e.isNumber()) ?? '';
+-    }
+-    return model;
+-  }
+-
+-  void _deletePhoto() {
+-    // Delete the photo and update the state
+-    setState(() {
+-      _uploadedPhoto = null;
+-    });
+-    logger.e("Photo deleted");
+-  }
+-
+-  @override
+-  Widget build(BuildContext context) {
+-    return Scaffold(
+-      appBar: AppBar(
+-        title: const Text(
+-          'Collector Registration',
+-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+-        ),
+-        backgroundColor: const Color(0xFF01B4D2),
+-      ),
+-      body: SingleChildScrollView(
+-        child: Column(
+-          crossAxisAlignment: CrossAxisAlignment.start,
+-          children: [
+-            const SizedBox(height: 16),
+-            const StepIndicator(),
+-            const SizedBox(height: 16),
+-            const SectionTitle(title: '1. Collector Identity'),
+-            const SizedBox(height: 16),
+-            Padding(
+-              padding: const EdgeInsets.all(16.0),
+-              child: Form(
+-                key: _formKey,
+-                child: Column(
+-                  crossAxisAlignment: CrossAxisAlignment.start,
+-                  children: [
+-                    const SectionHeader(title: 'PHOTO ID'),
+-                    const SizedBox(height: 16),
+-                    DropdownField(
+-                      hint: 'Please select a type of Photo ID',
+-                      items: const [
+-                        'Passport',
+-                        'Driver\'s License',
+-                        'National ID'
+-                      ],
+-                      value: selectedPhotoIDType,
+-                      onChanged: (value) {
+-                        setState(() {
+-                          selectedPhotoIDType = value;
+-                        });
+-                      },
+-                    ),
+-                    const SizedBox(height: 8),
+-                    PhotoIdSection(
+-                      uploadedPhoto: _uploadedPhoto,
+-                      getPhotoFromGallery: _getPhotoFromGallery,
+-                      takePhoto: _takePhoto,
+-                      scanPhoto: _scanImage,
+-                      watchPhoto: _showFullPhotoDialog,
+-                      deletePhoto: _deletePhoto,
+-                      // Provide the watch photo callback
+-                      isCheck: selectedPhotoIDType != null,
+-                    ),
+-                    CustomTextField(
+-                      label: 'Photo ID Document Number',
+-                      controller: idController,
+-                    ),
+-                    CustomTextField(
+-                      label: 'Nationality',
+-                      controller: nationalController,
+-                    ),
+-                    CustomTextField(
+-                      label: 'Expiry Date',
+-                      controller: expiryController,
+-                    ),
+-                    if (selectedPhotoIDType == "Driver's License" ||
+-                        selectedPhotoIDType == "National ID")
+-                      CustomTextField(
+-                        label: 'Card Number',
+-                        controller: cardNumberController,
+-                      ),
+-                    const SizedBox(height: 16),
+-                    const SectionHeader(title: 'PERSONAL DETAILS'),
+-                    CustomTextField(
+-                      label: 'First Name',
+-                      controller: firstNameController,
+-                    ),
+-                    CustomTextField(
+-                      label: 'Last Name',
+-                      controller: lastNameController,
+-                    ),
+-                    if (selectedPhotoIDType == "Passport")
+-                      CustomTextField(
+-                        label: 'Sex',
+-                        controller: sexController,
+-                      ),
+-                    CustomTextField(
+-                      label: 'Date of Birth',
+-                      controller: dobController,
+-                    ),
+-                    const SizedBox(height: 16),
+-                    const SectionHeader(title: 'CONTACT INFORMATION'),
+-                    CustomTextField(
+-                      label: 'Mobile Number',
+-                      controller: mobileNumberController,
+-                    ),
+-                    CustomTextField(
+-                      label: 'Phone Number (Optional)',
+-                      controller: phoneNumberController,
+-                    ),
+-                    const SizedBox(height: 16),
+-                    if (selectedPhotoIDType == "Driver's License" ||
+-                        selectedPhotoIDType == "National ID")
+-                      const SectionHeader(title: 'ADDRESS'),
+-                    if (selectedPhotoIDType == "Driver's License" ||
+-                        selectedPhotoIDType == "National ID")
+-                      CustomTextField(
+-                        label: 'Address',
+-                        controller: addressController,
+-                      ),
+-                    const SizedBox(height: 16),
+-                    ActionButtons(
+-                      formKey: _formKey,
+-                      path: getPathStorage(),
+-                      body: getBody(),
+-                    ),
+-                  ],
+-                ),
+-              ),
+-            ),
+-          ],
+-        ),
+-      ),
+-    );
+-  }
+-}
+diff --git a/lib/collect_registration/services/opencv_service.dart b/lib/core/native/opencv_service.dart
+rename from lib/collect_registration/services/opencv_service.dart
+rename to lib/core/native/opencv_service.dart
+diff --git a/lib/collect_registration/widgets/dropdown_field.dart b/lib/core/widgets/dropdown_field.dart
+rename from lib/collect_registration/widgets/dropdown_field.dart
+rename to lib/core/widgets/dropdown_field.dart
+diff --git a/lib/collect_registration/widgets/photo_id_section.dart b/lib/core/widgets/photo_id_section.dart
+rename from lib/collect_registration/widgets/photo_id_section.dart
+rename to lib/core/widgets/photo_id_section.dart
+diff --git a/lib/collect_registration/widgets/section_title.dart b/lib/core/widgets/section_title.dart
+rename from lib/collect_registration/widgets/section_title.dart
+rename to lib/core/widgets/section_title.dart
+diff --git a/lib/collect_registration/widgets/step_indicator.dart b/lib/core/widgets/step_indicator.dart
+rename from lib/collect_registration/widgets/step_indicator.dart
+rename to lib/core/widgets/step_indicator.dart

@@ -1,0 +1,33 @@
+name: Collect Assist Frontend PR Flow
+
+on:
+  pull_request:
+    branches:
+      - scan-fix
+
+jobs:
+  flutter-checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Set up Flutter
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.1'  # Change to your Flutter version if needed
+
+      # Install dependencies
+      - name: Install dependencies
+        run: flutter pub get
+
+      # Analyze code
+      - name: Run analyzer
+        run: flutter analyze
+
+      # (Optional) Build APK or web
+      - name: Build APK
+        run: flutter build apk --debug
